@@ -1,0 +1,35 @@
+{
+  "name": "rice-mill-desktop",
+  "version": "2.0.0",
+  "description": "Rice Mill Purchase Slip Management System - Desktop Edition",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "build": "electron-builder",
+    "build-win": "electron-builder --win"
+  },
+  "keywords": ["rice-mill", "purchase-slip", "desktop"],
+  "author": "Your Company",
+  "license": "MIT",
+  "devDependencies": {
+    "electron": "^28.0.0",
+    "electron-builder": "^24.9.1"
+  },
+  "build": {
+    "appId": "com.ricemill.purchaseslip",
+    "productName": "Rice Mill Manager",
+    "directories": {
+      "output": "dist"
+    },
+    "win": {
+      "target": "nsis",
+      "icon": "assets/icon.ico"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true
+    }
+  }
+}

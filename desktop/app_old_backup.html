@@ -1,0 +1,917 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rice Mill - Purchase Slip Manager</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="http://localhost:5000/static/css/style.css">
+    <style>
+        body {
+            background: #f5f7fa;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        .top-bar {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .top-bar h1 {
+            margin: 0;
+            font-size: 24px;
+        }
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+        .btn-logout {
+            background: rgba(255,255,255,0.2);
+            border: 2px solid white;
+            color: white;
+            padding: 8px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .btn-logout:hover {
+            background: white;
+            color: #667eea;
+        }
+        .main-container {
+            padding: 30px;
+        }
+        .tab-navigation {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 30px;
+        }
+        .tab-btn {
+            padding: 12px 30px;
+            background: white;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+        .tab-btn.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-color: #667eea;
+        }
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+        }
+        .view-mode-container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            max-height: 70vh;
+            overflow-y: auto;
+        }
+        .view-section {
+            margin-bottom: 25px;
+            border-bottom: 1px solid #e0e0e0;
+            padding-bottom: 15px;
+        }
+        .view-section:last-child {
+            border-bottom: none;
+        }
+        .view-section h5 {
+            border-bottom: 2px solid #667eea;
+            padding-bottom: 10px;
+            margin-bottom: 15px;
+            color: #667eea;
+            font-weight: 600;
+        }
+        .view-field {
+            display: grid;
+            grid-template-columns: 220px 1fr;
+            padding: 8px 0;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        .view-label {
+            font-weight: 600;
+            color: #555;
+        }
+        .view-value {
+            color: #333;
+        }
+        .modal-footer button {
+            min-width: 100px;
+            height: 38px;
+        }
+        .form-label {
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+        /* Print styles */
+        @media print {
+            body * {
+                visibility: hidden;
+            }
+            #printArea, #printArea * {
+                visibility: visible;
+            }
+            #printArea {
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 100%;
+            }
+            .no-print {
+                display: none !important;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="top-bar">
+        <h1>🌾 Rice Mill Purchase Slip Manager</h1>
+        <div class="user-info">
+            <span id="userName">Welcome, User</span>
+            <button class="btn-logout" onclick="logout()">Logout</button>
+        </div>
+    </div>
+
+    <div class="main-container">
+        <div class="tab-navigation">
+            <button class="tab-btn active" onclick="switchTab('create')">Create New Slip</button>
+            <button class="tab-btn" onclick="switchTab('view')">View All Slips</button>
+            <button class="tab-btn" onclick="switchTab('users')">Manage Users</button>
+        </div>
+
+        <!-- CREATE TAB -->
+        <div id="createTab" class="tab-content active">
+            <iframe src="http://localhost:5000/" style="width:100%; height:85vh; border:none; background:white; border-radius:10px;"></iframe>
+        </div>
+
+        <!-- VIEW TAB -->
+        <div id="viewTab" class="tab-content">
+            <div class="card">
+                <div class="card-body">
+                    <h3 class="mb-4">All Purchase Slips</h3>
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Bill No</th>
+                                    <th>Date</th>
+                                    <th>Party Name</th>
+                                    <th>Material</th>
+                                    <th>Amount</th>
+                                    <th>Payable</th>
+                                    <th>Balance</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="slipsTableBody">
+                                <tr><td colspan="8" class="text-center">Loading...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- USERS TAB -->
+        <div id="usersTab" class="tab-content">
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h3>User Management</h3>
+                        <button class="btn btn-primary" onclick="showAddUserModal()" id="addUserBtn">Add New User</button>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Username</th>
+                                    <th>Full Name</th>
+                                    <th>Role</th>
+                                    <th>Last Login</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="usersTableBody">
+                                <tr><td colspan="6" class="text-center">Loading...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Enhanced View Slip Modal with All Fields -->
+    <div class="modal fade" id="viewSlipModal" tabindex="-1">
+        <div class="modal-dialog modal-xl">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">View Purchase Slip Details</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body" id="viewSlipContent">
+                    Loading...
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary" onclick="showEditSlipModal()">Edit Slip</button>
+                    <button type="button" class="btn btn-success" onclick="printCurrentSlip()">Print Slip</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Comprehensive Edit Slip Modal -->
+    <div class="modal fade" id="editSlipModal" tabindex="-1">
+        <div class="modal-dialog modal-xl">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Edit Purchase Slip</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body" style="max-height: 70vh; overflow-y: auto;">
+                    <form id="editSlipForm">
+                        <!-- Company Details -->
+                        <h6 class="text-primary mb-3">Company Details</h6>
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label">Company Name</label>
+                                <input type="text" class="form-control" id="edit_company_name" name="company_name">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Company Address</label>
+                                <input type="text" class="form-control" id="edit_company_address" name="company_address">
+                            </div>
+                        </div>
+
+                        <!-- Basic Details -->
+                        <h6 class="text-primary mb-3">Basic Details</h6>
+                        <div class="row mb-3">
+                            <div class="col-md-4">
+                                <label class="form-label">Date</label>
+                                <input type="date" class="form-control" id="edit_date" name="date">
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">Vehicle No</label>
+                                <input type="text" class="form-control" id="edit_vehicle_no" name="vehicle_no">
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">Party Name</label>
+                                <input type="text" class="form-control" id="edit_party_name" name="party_name">
+                            </div>
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label">Material Name</label>
+                                <input type="text" class="form-control" id="edit_material_name" name="material_name">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Ticket No</label>
+                                <input type="text" class="form-control" id="edit_ticket_no" name="ticket_no">
+                            </div>
+                        </div>
+
+                        <!-- Payment Info -->
+                        <h6 class="text-primary mb-3">Payment Information</h6>
+                        <div class="row mb-3">
+                            <div class="col-md-4">
+                                <label class="form-label">Payment Method</label>
+                                <select class="form-select" id="edit_payment_method" name="payment_method">
+                                    <option value="">Select</option>
+                                    <option value="Cash">Cash</option>
+                                    <option value="Online Transfer">Online Transfer</option>
+                                    <option value="Cheque">Cheque</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">Payment Date</label>
+                                <input type="date" class="form-control" id="edit_payment_date" name="payment_date">
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">Payment Amount</label>
+                                <input type="number" step="0.01" class="form-control" id="edit_payment_amount" name="payment_amount">
+                            </div>
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col-md-12">
+                                <label class="form-label">Payment Bank Account</label>
+                                <textarea class="form-control" id="edit_payment_bank_account" name="payment_bank_account" rows="2"></textarea>
+                            </div>
+                        </div>
+
+                        <!-- Payment Due -->
+                        <h6 class="text-primary mb-3">Payment Due Details</h6>
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label">Payment Due Date</label>
+                                <input type="date" class="form-control" id="edit_payment_due_date" name="payment_due_date">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Payment Due Comment</label>
+                                <textarea class="form-control" id="edit_payment_due_comment" name="payment_due_comment" rows="2"></textarea>
+                            </div>
+                        </div>
+
+                        <!-- Instalments -->
+                        <h6 class="text-primary mb-3">Payment Instalments</h6>
+                        <div class="row mb-3">
+                            <div class="col-md-12">
+                                <label class="form-label">Instalment 1</label>
+                                <textarea class="form-control" id="edit_instalment_1" name="instalment_1" rows="2"></textarea>
+                            </div>
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col-md-12">
+                                <label class="form-label">Instalment 2</label>
+                                <textarea class="form-control" id="edit_instalment_2" name="instalment_2" rows="2"></textarea>
+                            </div>
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col-md-12">
+                                <label class="form-label">Instalment 3</label>
+                                <textarea class="form-control" id="edit_instalment_3" name="instalment_3" rows="2"></textarea>
+                            </div>
+                        </div>
+
+                        <!-- Comments -->
+                        <h6 class="text-primary mb-3">Additional Comments</h6>
+                        <div class="row mb-3">
+                            <div class="col-md-12">
+                                <label class="form-label">Quality Difference Comment</label>
+                                <textarea class="form-control" id="edit_quality_diff_comment" name="quality_diff_comment" rows="2"></textarea>
+                            </div>
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col-md-12">
+                                <label class="form-label">Paddy Unloading Godown</label>
+                                <textarea class="form-control" id="edit_paddy_unloading_godown" name="paddy_unloading_godown" rows="2"></textarea>
+                            </div>
+                        </div>
+
+                        <!-- Signatures -->
+                        <h6 class="text-primary mb-3">Signatures</h6>
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label">Prepared By</label>
+                                <input type="text" class="form-control" id="edit_prepared_by" name="prepared_by">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Authorised Sign</label>
+                                <input type="text" class="form-control" id="edit_authorised_sign" name="authorised_sign">
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-success" onclick="saveSlipEdits()">Save Changes</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add User Modal -->
+    <div class="modal fade" id="addUserModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Add New User</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="addUserForm">
+                        <div class="mb-3">
+                            <label class="form-label">Username</label>
+                            <input type="text" class="form-control" id="newUsername" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Password</label>
+                            <input type="password" class="form-control" id="newPassword" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Full Name</label>
+                            <input type="text" class="form-control" id="newFullName">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Role</label>
+                            <select class="form-select" id="newRole">
+                                <option value="user">User</option>
+                                <option value="admin">Admin</option>
+                            </select>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary" onclick="addUser()">Add User</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit User Modal -->
+    <div class="modal fade" id="editUserModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Edit User</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="editUserForm">
+                        <input type="hidden" id="editUserId">
+                        <div class="mb-3">
+                            <label class="form-label">Username</label>
+                            <input type="text" class="form-control" id="editUsername" readonly>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Full Name</label>
+                            <input type="text" class="form-control" id="editFullName">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Role</label>
+                            <select class="form-select" id="editUserRole">
+                                <option value="user">User</option>
+                                <option value="admin">Admin</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">New Password (leave blank to keep current)</label>
+                            <input type="password" class="form-control" id="editUserPassword">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Status</label>
+                            <select class="form-select" id="editUserStatus">
+                                <option value="true">Active</option>
+                                <option value="false">Inactive</option>
+                            </select>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary" onclick="updateUser()">Update User</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        const { ipcRenderer } = require('electron');
+        let currentViewSlipId = null;
+        let currentSlipData = null;
+
+        // Get current user from localStorage
+        const user = JSON.parse(localStorage.getItem('user') || '{}');
+        const isAdmin = user.role === 'admin';
+        document.getElementById('userName').textContent = `Welcome, ${user.full_name || user.username}`;
+
+        // Show/hide admin-only buttons
+        if (!isAdmin) {
+            const addUserBtn = document.getElementById('addUserBtn');
+            if (addUserBtn) addUserBtn.style.display = 'none';
+        }
+
+        function switchTab(tab) {
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+
+            if (tab === 'create') {
+                document.querySelector('.tab-btn:nth-child(1)').classList.add('active');
+                document.getElementById('createTab').classList.add('active');
+            } else if (tab === 'view') {
+                document.querySelector('.tab-btn:nth-child(2)').classList.add('active');
+                document.getElementById('viewTab').classList.add('active');
+                loadAllSlips();
+            } else if (tab === 'users') {
+                document.querySelector('.tab-btn:nth-child(3)').classList.add('active');
+                document.getElementById('usersTab').classList.add('active');
+                loadAllUsers();
+            }
+        }
+
+        function logout() {
+            localStorage.removeItem('user');
+            ipcRenderer.send('logout');
+        }
+
+        async function loadAllSlips() {
+            try {
+                const response = await fetch('http://localhost:5000/api/slips');
+                const result = await response.json();
+
+                const tbody = document.getElementById('slipsTableBody');
+                tbody.innerHTML = '';
+
+                if (result.success && result.slips.length > 0) {
+                    result.slips.forEach(slip => {
+                        const row = `
+                            <tr>
+                                <td>${slip.bill_no}</td>
+                                <td>${slip.date}</td>
+                                <td>${slip.party_name || '-'}</td>
+                                <td>${slip.material_name || '-'}</td>
+                                <td>₹${parseFloat(slip.amount || 0).toFixed(2)}</td>
+                                <td>₹${parseFloat(slip.payable_amount || 0).toFixed(2)}</td>
+                                <td>₹${parseFloat(slip.balance_amount || 0).toFixed(2)}</td>
+                                <td>
+                                    <button class="btn btn-sm btn-info" onclick="viewSlip(${slip.id})">View</button>
+                                    <button class="btn btn-sm btn-success" onclick="printSlipDirect(${slip.id})">Print</button>
+                                    <button class="btn btn-sm btn-danger" onclick="deleteSlip(${slip.id})">Delete</button>
+                                </td>
+                            </tr>
+                        `;
+                        tbody.innerHTML += row;
+                    });
+                } else {
+                    tbody.innerHTML = '<tr><td colspan="8" class="text-center">No slips found</td></tr>';
+                }
+            } catch (error) {
+                console.error('Error loading slips:', error);
+                document.getElementById('slipsTableBody').innerHTML = '<tr><td colspan="8" class="text-center text-danger">Error loading slips</td></tr>';
+            }
+        }
+
+        async function viewSlip(slipId) {
+            currentViewSlipId = slipId;
+            try {
+                const response = await fetch(`http://localhost:5000/api/slip/${slipId}`);
+                const result = await response.json();
+
+                if (result.success) {
+                    currentSlipData = result.slip;
+                    const slip = result.slip;
+
+                    // Create comprehensive view with ALL fields
+                    const content = `
+                        <div class="view-mode-container">
+                            <div class="view-section">
+                                <h5>Company & Document Details</h5>
+                                <div class="view-field"><div class="view-label">Company Name:</div><div class="view-value">${slip.company_name || '-'}</div></div>
+                                <div class="view-field"><div class="view-label">Company Address:</div><div class="view-value">${slip.company_address || '-'}</div></div>
+                                <div class="view-field"><div class="view-label">Document Type:</div><div class="view-value">${slip.document_type || 'Purchase Slip'}</div></div>
+                            </div>
+
+                            <div class="view-section">
+                                <h5>Basic Information</h5>
+                                <div class="view-field"><div class="view-label">Bill No:</div><div class="view-value">${slip.bill_no}</div></div>
+                                <div class="view-field"><div class="view-label">Date:</div><div class="view-value">${slip.date}</div></div>
+                                <div class="view-field"><div class="view-label">Vehicle No:</div><div class="view-value">${slip.vehicle_no || '-'}</div></div>
+                                <div class="view-field"><div class="view-label">Party Name:</div><div class="view-value">${slip.party_name || '-'}</div></div>
+                                <div class="view-field"><div class="view-label">Material:</div><div class="view-value">${slip.material_name || '-'}</div></div>
+                                <div class="view-field"><div class="view-label">Ticket No:</div><div class="view-value">${slip.ticket_no || '-'}</div></div>
+                                <div class="view-field"><div class="view-label">Broker:</div><div class="view-value">${slip.broker || '-'}</div></div>
+                                <div class="view-field"><div class="view-label">GST No:</div><div class="view-value">${slip.gst_no || '-'}</div></div>
+                            </div>
+
+                            <div class="view-section">
+                                <h5>Weight & Rate Details</h5>
+                                <div class="view-field"><div class="view-label">Bags:</div><div class="view-value">${slip.bags || 0}</div></div>
+                                <div class="view-field"><div class="view-label">Net Weight:</div><div class="view-value">${slip.net_weight || 0} kg</div></div>
+                                <div class="view-field"><div class="view-label">Shortage:</div><div class="view-value">${slip.shortage_kg || 0} kg</div></div>
+                                <div class="view-field"><div class="view-label">Avg Bag Weight:</div><div class="view-value">${slip.avg_bag_weight || 0} kg</div></div>
+                                <div class="view-field"><div class="view-label">Rate Basis:</div><div class="view-value">${slip.rate_basis || '100'} kg</div></div>
+                                <div class="view-field"><div class="view-label">Rate:</div><div class="view-value">₹${slip.rate || 0}</div></div>
+                                <div class="view-field"><div class="view-label">Calculated Rate:</div><div class="view-value">₹${slip.calculated_rate || slip.rate || 0}</div></div>
+                            </div>
+
+                            <div class="view-section">
+                                <h5>Financial Details</h5>
+                                <div class="view-field"><div class="view-label">Amount:</div><div class="view-value"><strong>₹${slip.amount || 0}</strong></div></div>
+                                <div class="view-field"><div class="view-label">Bank Commission:</div><div class="view-value">₹${slip.bank_commission || 0}</div></div>
+                                <div class="view-field"><div class="view-label">Postage:</div><div class="view-value">₹${slip.postage || 0}</div></div>
+                                <div class="view-field"><div class="view-label">Batav (${slip.batav_percent || 0}%):</div><div class="view-value">₹${slip.batav || 0}</div></div>
+                                <div class="view-field"><div class="view-label">Dalali (${slip.dalali_rate || 0}/kg):</div><div class="view-value">₹${slip.dalali || 0}</div></div>
+                                <div class="view-field"><div class="view-label">Hammali (${slip.hammali_rate || 0}/kg):</div><div class="view-value">₹${slip.hammali || 0}</div></div>
+                                <div class="view-field"><div class="view-label">Freight:</div><div class="view-value">₹${slip.freight || 0}</div></div>
+                                <div class="view-field"><div class="view-label">Rate Diff:</div><div class="view-value">₹${slip.rate_diff || 0}</div></div>
+                                <div class="view-field"><div class="view-label">Quality Diff:</div><div class="view-value">₹${slip.quality_diff || 0}</div></div>
+                                <div class="view-field"><div class="view-label">Moisture Ded (${slip.moisture_ded_percent || 0}%):</div><div class="view-value">₹${slip.moisture_ded || 0}</div></div>
+                                <div class="view-field"><div class="view-label">TDS:</div><div class="view-value">₹${slip.tds || 0}</div></div>
+                                <div class="view-field"><div class="view-label">Total Deduction:</div><div class="view-value"><strong>₹${slip.total_deduction || 0}</strong></div></div>
+                                <div class="view-field"><div class="view-label">Payable Amount:</div><div class="view-value"><strong style="color:#2e7d32">₹${slip.payable_amount || 0}</strong></div></div>
+                            </div>
+
+                            <div class="view-section">
+                                <h5>Payment Information</h5>
+                                <div class="view-field"><div class="view-label">Payment Method:</div><div class="view-value">${slip.payment_method || '-'}</div></div>
+                                <div class="view-field"><div class="view-label">Payment Date:</div><div class="view-value">${slip.payment_date || '-'}</div></div>
+                                <div class="view-field"><div class="view-label">Payment Amount:</div><div class="view-value">₹${slip.payment_amount || 0}</div></div>
+                                <div class="view-field"><div class="view-label">Payment Due Date:</div><div class="view-value">${slip.payment_due_date || '-'}</div></div>
+                                ${slip.payment_bank_account ? `<div class="view-field"><div class="view-label">Bank Account:</div><div class="view-value">${slip.payment_bank_account}</div></div>` : ''}
+                                ${slip.payment_due_comment ? `<div class="view-field"><div class="view-label">Due Comment:</div><div class="view-value">${slip.payment_due_comment}</div></div>` : ''}
+                            </div>
+
+                            ${slip.instalment_1 || slip.instalment_2 || slip.instalment_3 ? `
+                            <div class="view-section">
+                                <h5>Payment Instalments</h5>
+                                ${slip.instalment_1 ? `<div class="view-field"><div class="view-label">Instalment 1:</div><div class="view-value">${slip.instalment_1}</div></div>` : ''}
+                                ${slip.instalment_2 ? `<div class="view-field"><div class="view-label">Instalment 2:</div><div class="view-value">${slip.instalment_2}</div></div>` : ''}
+                                ${slip.instalment_3 ? `<div class="view-field"><div class="view-label">Instalment 3:</div><div class="view-value">${slip.instalment_3}</div></div>` : ''}
+                                ${slip.instalment_4 ? `<div class="view-field"><div class="view-label">Instalment 4:</div><div class="view-value">${slip.instalment_4}</div></div>` : ''}
+                                ${slip.instalment_5 ? `<div class="view-field"><div class="view-label">Instalment 5:</div><div class="view-value">${slip.instalment_5}</div></div>` : ''}
+                            </div>
+                            ` : ''}
+
+                            ${slip.quality_diff_comment || slip.paddy_unloading_godown ? `
+                            <div class="view-section">
+                                <h5>Additional Comments</h5>
+                                ${slip.quality_diff_comment ? `<div class="view-field"><div class="view-label">Quality Diff Comment:</div><div class="view-value">${slip.quality_diff_comment}</div></div>` : ''}
+                                ${slip.paddy_unloading_godown ? `<div class="view-field"><div class="view-label">Paddy Unloading Godown:</div><div class="view-value">${slip.paddy_unloading_godown}</div></div>` : ''}
+                            </div>
+                            ` : ''}
+
+                            <div class="view-section">
+                                <h5>Signatures</h5>
+                                <div class="view-field"><div class="view-label">Prepared By:</div><div class="view-value">${slip.prepared_by || '-'}</div></div>
+                                <div class="view-field"><div class="view-label">Authorised Sign:</div><div class="view-value">${slip.authorised_sign || '-'}</div></div>
+                            </div>
+                        </div>
+                    `;
+
+                    document.getElementById('viewSlipContent').innerHTML = content;
+                    new bootstrap.Modal(document.getElementById('viewSlipModal')).show();
+                }
+            } catch (error) {
+                console.error('Error viewing slip:', error);
+                alert('Error loading slip details');
+            }
+        }
+
+        function showEditSlipModal() {
+            if (!currentSlipData) return;
+
+            const slip = currentSlipData;
+
+            // Pre-fill all edit form fields
+            document.getElementById('edit_company_name').value = slip.company_name || '';
+            document.getElementById('edit_company_address').value = slip.company_address || '';
+            document.getElementById('edit_date').value = slip.date || '';
+            document.getElementById('edit_vehicle_no').value = slip.vehicle_no || '';
+            document.getElementById('edit_party_name').value = slip.party_name || '';
+            document.getElementById('edit_material_name').value = slip.material_name || '';
+            document.getElementById('edit_ticket_no').value = slip.ticket_no || '';
+            document.getElementById('edit_payment_method').value = slip.payment_method || '';
+            document.getElementById('edit_payment_date').value = slip.payment_date || '';
+            document.getElementById('edit_payment_amount').value = slip.payment_amount || '';
+            document.getElementById('edit_payment_bank_account').value = slip.payment_bank_account || '';
+            document.getElementById('edit_payment_due_date').value = slip.payment_due_date || '';
+            document.getElementById('edit_payment_due_comment').value = slip.payment_due_comment || '';
+            document.getElementById('edit_instalment_1').value = slip.instalment_1 || '';
+            document.getElementById('edit_instalment_2').value = slip.instalment_2 || '';
+            document.getElementById('edit_instalment_3').value = slip.instalment_3 || '';
+            document.getElementById('edit_quality_diff_comment').value = slip.quality_diff_comment || '';
+            document.getElementById('edit_paddy_unloading_godown').value = slip.paddy_unloading_godown || '';
+            document.getElementById('edit_prepared_by').value = slip.prepared_by || '';
+            document.getElementById('edit_authorised_sign').value = slip.authorised_sign || '';
+
+            // Hide view modal and show edit modal
+            bootstrap.Modal.getInstance(document.getElementById('viewSlipModal')).hide();
+            new bootstrap.Modal(document.getElementById('editSlipModal')).show();
+        }
+
+        async function saveSlipEdits() {
+            if (!currentViewSlipId) return;
+
+            const formData = new FormData(document.getElementById('editSlipForm'));
+            const data = {};
+            formData.forEach((value, key) => {
+                data[key] = value;
+            });
+
+            try {
+                const response = await fetch(`http://localhost:5000/api/slip/${currentViewSlipId}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    alert('Slip updated successfully!');
+                    bootstrap.Modal.getInstance(document.getElementById('editSlipModal')).hide();
+                    loadAllSlips();
+                    currentViewSlipId = null;
+                    currentSlipData = null;
+                } else {
+                    alert('Error updating slip: ' + result.message);
+                }
+            } catch (error) {
+                console.error('Error updating slip:', error);
+                alert('Error updating slip');
+            }
+        }
+
+        function printCurrentSlip() {
+            if (currentViewSlipId) {
+                printSlipDirect(currentViewSlipId);
+            }
+        }
+
+        function printSlipDirect(slipId) {
+            // Send print request to Electron main process
+            ipcRenderer.send('print-slip', slipId);
+        }
+
+        async function deleteSlip(slipId) {
+            if (confirm('Are you sure you want to delete this slip?')) {
+                try {
+                    const response = await fetch(`http://localhost:5000/api/slip/${slipId}`, {
+                        method: 'DELETE'
+                    });
+                    const result = await response.json();
+
+                    if (result.success) {
+                        alert('Slip deleted successfully');
+                        loadAllSlips();
+                    } else {
+                        alert('Error deleting slip: ' + result.message);
+                    }
+                } catch (error) {
+                    console.error('Error deleting slip:', error);
+                    alert('Error deleting slip');
+                }
+            }
+        }
+
+        async function loadAllUsers() {
+            try {
+                const response = await fetch('http://localhost:5000/api/users');
+                const result = await response.json();
+
+                const tbody = document.getElementById('usersTableBody');
+                tbody.innerHTML = '';
+
+                if (result.success && result.users.length > 0) {
+                    result.users.forEach(usr => {
+                        const showEditDelete = isAdmin;
+                        const row = `
+                            <tr>
+                                <td>${usr.username}</td>
+                                <td>${usr.full_name || '-'}</td>
+                                <td><span class="badge bg-${usr.role === 'admin' ? 'danger' : 'primary'}">${usr.role}</span></td>
+                                <td>${usr.last_login ? new Date(usr.last_login).toLocaleString() : 'Never'}</td>
+                                <td><span class="badge bg-${usr.is_active ? 'success' : 'secondary'}">${usr.is_active ? 'Active' : 'Inactive'}</span></td>
+                                <td>
+                                    ${showEditDelete ? `
+                                        <button class="btn btn-sm btn-warning" onclick="showEditUserModal(${usr.id})">Edit</button>
+                                        <button class="btn btn-sm btn-danger" onclick="deleteUser(${usr.id})" ${usr.username === 'admin' ? 'disabled' : ''}>Delete</button>
+                                    ` : '<span class="text-muted">-</span>'}
+                                </td>
+                            </tr>
+                        `;
+                        tbody.innerHTML += row;
+                    });
+                } else {
+                    tbody.innerHTML = '<tr><td colspan="6" class="text-center">No users found</td></tr>';
+                }
+            } catch (error) {
+                console.error('Error loading users:', error);
+                document.getElementById('usersTableBody').innerHTML = '<tr><td colspan="6" class="text-center text-danger">Error loading users</td></tr>';
+            }
+        }
+
+        function showAddUserModal() {
+            document.getElementById('addUserForm').reset();
+            new bootstrap.Modal(document.getElementById('addUserModal')).show();
+        }
+
+        async function addUser() {
+            const username = document.getElementById('newUsername').value.trim();
+            const password = document.getElementById('newPassword').value.trim();
+            const fullName = document.getElementById('newFullName').value.trim();
+            const role = document.getElementById('newRole').value;
+
+            if (!username || !password) {
+                alert('Username and password are required');
+                return;
+            }
+
+            try {
+                const response = await fetch('http://localhost:5000/api/users', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        username,
+                        password,
+                        full_name: fullName,
+                        role,
+                        requesting_user_role: user.role
+                    })
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    alert('User added successfully');
+                    bootstrap.Modal.getInstance(document.getElementById('addUserModal')).hide();
+                    document.getElementById('addUserForm').reset();
+                    loadAllUsers();
+                } else {
+                    alert('Error adding user: ' + result.message);
+                }
+            } catch (error) {
+                console.error('Error adding user:', error);
+                alert('Error adding user');
+            }
+        }
+
+        async function showEditUserModal(userId) {
+            try {
+                const response = await fetch('http://localhost:5000/api/users');
+                const result = await response.json();
+
+                if (result.success) {
+                    const usr = result.users.find(u => u.id === userId);
+                    if (usr) {
+                        document.getElementById('editUserId').value = usr.id;
+                        document.getElementById('editUsername').value = usr.username;
+                        document.getElementById('editFullName').value = usr.full_name || '';
+                        document.getElementById('editUserRole').value = usr.role;
+                        document.getElementById('editUserStatus').value = usr.is_active.toString();
+                        document.getElementById('editUserPassword').value = '';
+
+                        new bootstrap.Modal(document.getElementById('editUserModal')).show();
+                    }
+                }
+            } catch (error) {
+                console.error('Error loading user:', error);
+                alert('Error loading user details');
+            }
+        }
+
+        async function updateUser() {
+            const userId = document.getElementById('editUserId').value;
+            const fullName = document.getElementById('editFullName').value.trim();
+            const role = document.getElementById('editUserRole').value;
+            const isActive = document.getElementById('editUserStatus').value === 'true';
+            const password = document.getElementById('editUserPassword').value.trim();
+
+            try {
+                const response = await fetch(`http://localhost:5000/api/users/${userId}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        full_name: fullName,
+                        role,
+                        is_active: isActive,
+                        password: password || undefined,
+                        requesting_user_role: user.role
+                    })
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    alert('User updated successfully');
+                    bootstrap.Modal.getInstance(document.getElementById('editUserModal')).hide();
+                    loadAllUsers();
+                } else {
+                    alert('Error updating user: ' + result.message);
+                }
+            } catch (error) {
+                console.error('Error updating user:', error);
+                alert('Error updating user');
+            }
+        }
+
+        async function deleteUser(userId) {
+            if (confirm('Are you sure you want to delete this user?')) {
+                try {
+                    const response = await fetch(`http://localhost:5000/api/users/${userId}`, {
+                        method: 'DELETE',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ requesting_user_role: user.role })
+                    });
+
+                    const result = await response.json();
+
+                    if (result.success) {
+                        alert('User deleted successfully');
+                        loadAllUsers();
+                    } else {
+                        alert('Error deleting user: ' + result.message);
+                    }
+                } catch (error) {
+                    console.error('Error deleting user:', error);
+                    alert('Error deleting user');
+                }
+            }
+        }
+    </script>
+</body>
+</html>

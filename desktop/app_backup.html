@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rice Mill - Purchase Slip Manager</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="http://localhost:5000/static/css/style.css">
+    <style>
+        body {
+            background: #f5f7fa;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        .top-bar {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .top-bar h1 {
+            margin: 0;
+            font-size: 24px;
+        }
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+        .btn-logout {
+            background: rgba(255,255,255,0.2);
+            border: 2px solid white;
+            color: white;
+            padding: 8px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .btn-logout:hover {
+            background: white;
+            color: #667eea;
+        }
+        .main-container {
+            padding: 30px;
+        }
+        .tab-navigation {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 30px;
+        }
+        .tab-btn {
+            padding: 12px 30px;
+            background: white;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+        .tab-btn.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-color: #667eea;
+        }
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+        }
+        .balance-display {
+            background: #e8f5e9;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 10px;
+            font-size: 18px;
+            font-weight: bold;
+            color: #2e7d32;
+            text-align: center;
+        }
+        .instalment-row {
+            display: grid;
+            grid-template-columns: 150px 1fr 150px;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+        .view-mode-container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .view-section {
+            margin-bottom: 25px;
+        }
+        .view-section h4 {
+            border-bottom: 2px solid #667eea;
+            padding-bottom: 10px;
+            margin-bottom: 15px;
+        }
+        .view-field {
+            display: grid;
+            grid-template-columns: 200px 1fr;
+            padding: 10px 0;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        .view-label {
+            font-weight: 600;
+            color: #555;
+        }
+        .view-value {
+            color: #333;
+        }
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="top-bar">
+        <h1>🌾 Rice Mill Purchase Slip Manager</h1>
+        <div class="user-info">
+            <span id="userName">Welcome, User</span>
+            <button class="btn-logout" onclick="logout()">Logout</button>
+        </div>
+    </div>
+
+    <div class="main-container">
+        <div class="tab-navigation">
+            <button class="tab-btn active" onclick="switchTab('create')">Create New Slip</button>
+            <button class="tab-btn" onclick="switchTab('view')">View All Slips</button>
+            <button class="tab-btn" onclick="switchTab('users')">Manage Users</button>
+        </div>
+
+        <!-- CREATE TAB -->
+        <div id="createTab" class="tab-content active">
+            <iframe src="http://localhost:5000/" style="width:100%; height:85vh; border:none; background:white; border-radius:10px;"></iframe>
+        </div>
+
+        <!-- VIEW TAB -->
+        <div id="viewTab" class="tab-content">
+            <div class="card">
+                <div class="card-body">
+                    <h3 class="mb-4">All Purchase Slips</h3>
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Bill No</th>
+                                    <th>Date</th>
+                                    <th>Party Name</th>
+                                    <th>Material</th>
+                                    <th>Amount</th>
+                                    <th>Payable</th>
+                                    <th>Balance</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="slipsTableBody">
+                                <tr><td colspan="8" class="text-center">Loading...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- USERS TAB -->
+        <div id="usersTab" class="tab-content">
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h3>User Management</h3>
+                        <button class="btn btn-primary" onclick="showAddUserModal()">Add New User</button>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Username</th>
+                                    <th>Full Name</th>
+                                    <th>Role</th>
+                                    <th>Last Login</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="usersTableBody">
+                                <tr><td colspan="6" class="text-center">Loading...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- View Slip Modal -->
+    <div class="modal fade" id="viewSlipModal" tabindex="-1">
+        <div class="modal-dialog modal-xl">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">View Purchase Slip</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body" id="viewSlipContent">
+                    Loading...
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary" onclick="editCurrentSlip()">Edit Slip</button>
+                    <button type="button" class="btn btn-success" onclick="printCurrentSlip()">Print Slip</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add User Modal -->
+    <div class="modal fade" id="addUserModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Add New User</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="addUserForm">
+                        <div class="mb-3">
+                            <label class="form-label">Username</label>
+                            <input type="text" class="form-control" id="newUsername" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Password</label>
+                            <input type="password" class="form-control" id="newPassword" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Full Name</label>
+                            <input type="text" class="form-control" id="newFullName">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Role</label>
+                            <select class="form-select" id="newRole">
+                                <option value="user">User</option>
+                                <option value="admin">Admin</option>
+                            </select>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary" onclick="addUser()">Add User</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        const { ipcRenderer } = require('electron');
+        let currentViewSlipId = null;
+
+        const user = JSON.parse(localStorage.getItem('user') || '{}');
+        document.getElementById('userName').textContent = `Welcome, ${user.full_name || user.username}`;
+
+        function switchTab(tab) {
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+
+            if (tab === 'create') {
+                document.querySelector('.tab-btn:nth-child(1)').classList.add('active');
+                document.getElementById('createTab').classList.add('active');
+            } else if (tab === 'view') {
+                document.querySelector('.tab-btn:nth-child(2)').classList.add('active');
+                document.getElementById('viewTab').classList.add('active');
+                loadAllSlips();
+            } else if (tab === 'users') {
+                document.querySelector('.tab-btn:nth-child(3)').classList.add('active');
+                document.getElementById('usersTab').classList.add('active');
+                loadAllUsers();
+            }
+        }
+
+        function logout() {
+            localStorage.removeItem('user');
+            ipcRenderer.send('logout');
+        }
+
+        async function loadAllSlips() {
+            try {
+                const response = await fetch('http://localhost:5000/api/slips');
+                const result = await response.json();
+
+                const tbody = document.getElementById('slipsTableBody');
+                tbody.innerHTML = '';
+
+                if (result.success && result.slips.length > 0) {
+                    result.slips.forEach(slip => {
+                        const row = `
+                            <tr>
+                                <td>${slip.bill_no}</td>
+                                <td>${slip.date}</td>
+                                <td>${slip.party_name}</td>
+                                <td>${slip.material_name}</td>
+                                <td>₹${parseFloat(slip.amount || 0).toFixed(2)}</td>
+                                <td>₹${parseFloat(slip.payable_amount || 0).toFixed(2)}</td>
+                                <td>₹${parseFloat(slip.balance_amount || 0).toFixed(2)}</td>
+                                <td>
+                                    <button class="btn btn-sm btn-info" onclick="viewSlip(${slip.id})">View</button>
+                                    <button class="btn btn-sm btn-success" onclick="printSlipDirect(${slip.id})">Print</button>
+                                    <button class="btn btn-sm btn-danger" onclick="deleteSlip(${slip.id})">Delete</button>
+                                </td>
+                            </tr>
+                        `;
+                        tbody.innerHTML += row;
+                    });
+                } else {
+                    tbody.innerHTML = '<tr><td colspan="8" class="text-center">No slips found</td></tr>';
+                }
+            } catch (error) {
+                console.error('Error loading slips:', error);
+                document.getElementById('slipsTableBody').innerHTML = '<tr><td colspan="8" class="text-center text-danger">Error loading slips</td></tr>';
+            }
+        }
+
+        async function viewSlip(slipId) {
+            currentViewSlipId = slipId;
+            try {
+                const response = await fetch(`http://localhost:5000/api/slip/${slipId}`);
+                const result = await response.json();
+
+                if (result.success) {
+                    const slip = result.slip;
+                    const content = `
+                        <div class="view-mode-container">
+                            <div class="view-section">
+                                <h4>Basic Information</h4>
+                                <div class="view-field"><div class="view-label">Bill No:</div><div class="view-value">${slip.bill_no}</div></div>
+                                <div class="view-field"><div class="view-label">Date:</div><div class="view-value">${slip.date}</div></div>
+                                <div class="view-field"><div class="view-label">Party Name:</div><div class="view-value">${slip.party_name}</div></div>
+                                <div class="view-field"><div class="view-label">Material:</div><div class="view-value">${slip.material_name}</div></div>
+                                <div class="view-field"><div class="view-label">Vehicle No:</div><div class="view-value">${slip.vehicle_no}</div></div>
+                            </div>
+
+                            <div class="view-section">
+                                <h4>Weight Details</h4>
+                                <div class="view-field"><div class="view-label">Bags:</div><div class="view-value">${slip.bags}</div></div>
+                                <div class="view-field"><div class="view-label">Net Weight:</div><div class="view-value">${slip.net_weight} kg</div></div>
+                                <div class="view-field"><div class="view-label">Shortage:</div><div class="view-value">${slip.shortage_kg || 0} kg</div></div>
+                                <div class="view-field"><div class="view-label">Avg Bag Weight:</div><div class="view-value">${slip.avg_bag_weight} kg</div></div>
+                            </div>
+
+                            <div class="view-section">
+                                <h4>Financial Details</h4>
+                                <div class="view-field"><div class="view-label">Rate:</div><div class="view-value">₹${slip.calculated_rate || slip.rate}</div></div>
+                                <div class="view-field"><div class="view-label">Amount:</div><div class="view-value">₹${slip.amount}</div></div>
+                                <div class="view-field"><div class="view-label">Total Deduction:</div><div class="view-value">₹${slip.total_deduction}</div></div>
+                                <div class="view-field"><div class="view-label">Payable Amount:</div><div class="view-value"><strong>₹${slip.payable_amount}</strong></div></div>
+                                <div class="view-field"><div class="view-label">Balance Amount:</div><div class="view-value"><strong style="color:#2e7d32">₹${slip.balance_amount || 0}</strong></div></div>
+                            </div>
+                        </div>
+                    `;
+
+                    document.getElementById('viewSlipContent').innerHTML = content;
+                    new bootstrap.Modal(document.getElementById('viewSlipModal')).show();
+                }
+            } catch (error) {
+                console.error('Error viewing slip:', error);
+                alert('Error loading slip details');
+            }
+        }
+
+        function editCurrentSlip() {
+            if (currentViewSlipId) {
+                bootstrap.Modal.getInstance(document.getElementById('viewSlipModal')).hide();
+                switchTab('create');
+                setTimeout(() => {
+                    const iframe = document.querySelector('#createTab iframe');
+                    iframe.contentWindow.postMessage({ action: 'loadSlipForEdit', slipId: currentViewSlipId }, '*');
+                }, 500);
+            }
+        }
+
+        function printCurrentSlip() {
+            if (currentViewSlipId) {
+                printSlipDirect(currentViewSlipId);
+            }
+        }
+
+        function printSlipDirect(slipId) {
+            ipcRenderer.send('print-slip', slipId);
+        }
+
+        async function deleteSlip(slipId) {
+            if (confirm('Are you sure you want to delete this slip?')) {
+                try {
+                    const response = await fetch(`http://localhost:5000/api/slip/${slipId}`, {
+                        method: 'DELETE'
+                    });
+                    const result = await response.json();
+
+                    if (result.success) {
+                        alert('Slip deleted successfully');
+                        loadAllSlips();
+                    } else {
+                        alert('Error deleting slip: ' + result.message);
+                    }
+                } catch (error) {
+                    console.error('Error deleting slip:', error);
+                    alert('Error deleting slip');
+                }
+            }
+        }
+
+        async function loadAllUsers() {
+            try {
+                const response = await fetch('http://localhost:5000/api/users');
+                const result = await response.json();
+
+                const tbody = document.getElementById('usersTableBody');
+                tbody.innerHTML = '';
+
+                if (result.success && result.users.length > 0) {
+                    result.users.forEach(user => {
+                        const row = `
+                            <tr>
+                                <td>${user.username}</td>
+                                <td>${user.full_name || '-'}</td>
+                                <td><span class="badge bg-${user.role === 'admin' ? 'danger' : 'primary'}">${user.role}</span></td>
+                                <td>${user.last_login ? new Date(user.last_login).toLocaleString() : 'Never'}</td>
+                                <td><span class="badge bg-${user.is_active ? 'success' : 'secondary'}">${user.is_active ? 'Active' : 'Inactive'}</span></td>
+                                <td>
+                                    <button class="btn btn-sm btn-danger" onclick="deleteUser(${user.id})" ${user.username === 'admin' ? 'disabled' : ''}>Delete</button>
+                                </td>
+                            </tr>
+                        `;
+                        tbody.innerHTML += row;
+                    });
+                } else {
+                    tbody.innerHTML = '<tr><td colspan="6" class="text-center">No users found</td></tr>';
+                }
+            } catch (error) {
+                console.error('Error loading users:', error);
+                document.getElementById('usersTableBody').innerHTML = '<tr><td colspan="6" class="text-center text-danger">Error loading users</td></tr>';
+            }
+        }
+
+        function showAddUserModal() {
+            new bootstrap.Modal(document.getElementById('addUserModal')).show();
+        }
+
+        async function addUser() {
+            const username = document.getElementById('newUsername').value.trim();
+            const password = document.getElementById('newPassword').value.trim();
+            const fullName = document.getElementById('newFullName').value.trim();
+            const role = document.getElementById('newRole').value;
+
+            if (!username || !password) {
+                alert('Username and password are required');
+                return;
+            }
+
+            try {
+                const response = await fetch('http://localhost:5000/api/users', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, password, full_name: fullName, role })
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    alert('User added successfully');
+                    bootstrap.Modal.getInstance(document.getElementById('addUserModal')).hide();
+                    document.getElementById('addUserForm').reset();
+                    loadAllUsers();
+                } else {
+                    alert('Error adding user: ' + result.message);
+                }
+            } catch (error) {
+                console.error('Error adding user:', error);
+                alert('Error adding user');
+            }
+        }
+
+        async function deleteUser(userId) {
+            if (confirm('Are you sure you want to delete this user?')) {
+                try {
+                    const response = await fetch(`http://localhost:5000/api/users/${userId}`, {
+                        method: 'DELETE'
+                    });
+
+                    const result = await response.json();
+
+                    if (result.success) {
+                        alert('User deleted successfully');
+                        loadAllUsers();
+                    } else {
+                        alert('Error deleting user: ' + result.message);
+                    }
+                } catch (error) {
+                    console.error('Error deleting user:', error);
+                    alert('Error deleting user');
+                }
+            }
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,549 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Purchase Slip Manager</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <!-- <nav class="navbar navbar-dark bg-primary">
+        <div class="container-fluid">
+            <span class="navbar-brand mb-0 h1">Rice Mill Purchase Slip Manager</span>
+        </div>
+    </nav> -->
+
+    <div class="container mt-4">
+        <div class="card shadow-sm">
+            <div class="card-header bg-white">
+                <h4 class="mb-0">New Purchase Slip</h4>
+            </div>
+            <div class="card-body">
+                <form id="purchaseForm">
+
+                    <div class="section-header">Company Details</div>
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Company Name</label>
+                            <input type="text" class="form-control" name="company_name">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Address</label>
+                            <input type="text" class="form-control" name="company_address">
+                        </div>
+                    </div>
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <label class="form-label">Document Type</label>
+                            <input type="text" class="form-control" name="document_type" value="Purchase Slip" readonly>
+                        </div>
+                    </div>
+
+                    <div class="section-header">Vehicle & Party Details</div>
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Vehicle No</label>
+                            <input type="text" class="form-control" name="vehicle_no">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Date</label>
+                            <input type="date" class="form-control" id="date" name="date" required>
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Bill No.</label>
+                            <input type="text" class="form-control" id="bill_no" readonly>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Party Name</label>
+                            <input type="text" class="form-control" name="party_name">
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Material Name</label>
+                            <input type="text" class="form-control" name="material_name">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Ticket No</label>
+                            <input type="text" class="form-control" name="ticket_no">
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Broker</label>
+                            <input type="text" class="form-control" name="broker">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Terms of Delivery</label>
+                            <input type="text" class="form-control" name="terms_of_delivery">
+                        </div>
+                    </div>
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <label class="form-label">Sup. Inv. No</label>
+                            <input type="text" class="form-control" name="sup_inv_no">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">GST No</label>
+                            <input type="text" class="form-control" name="gst_no">
+                        </div>
+                    </div>
+
+                    <div class="section-header">Quantity Details</div>
+
+                    <!-- Row 1: Bags, Net Weight, Gunny Weight, Avg Bag Weight -->
+                    <div class="row mb-3">
+                        <div class="col-md-3">
+                            <label class="form-label">Bags</label>
+                            <input type="number" step="1" class="form-control calc-input" name="bags" id="bags" value="0">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Net Weight (KG)</label>
+                            <input type="number" step="0.01" class="form-control calc-input" name="net_weight_kg" id="net_weight_kg" value="0">
+                            <small class="text-muted">From Dharam Kata</small>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Gunny Weight (KG)</label>
+                            <input type="number" step="0.01" class="form-control calc-input" name="gunny_weight_kg" id="gunny_weight_kg" value="0">
+                            <small class="text-muted">Bora weight</small>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Avg Bag Weight (KG)</label>
+                            <input type="number" step="0.01" class="form-control computed-field" name="avg_bag_weight" id="avg_bag_weight" readonly value="0">
+                            <small class="text-muted">Auto-calculated</small>
+                        </div>
+                    </div>
+
+                    <!-- Row 2: Final Weight, Weight Quintal, Weight Khandi -->
+                    <div class="row mb-3">
+                        <div class="col-md-4">
+                            <label class="form-label">Final Weight (KG)</label>
+                            <input type="number" step="0.01" class="form-control computed-field" name="final_weight_kg" id="final_weight_kg" readonly value="0">
+                            <small class="text-muted">Net - Gunny</small>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Weight (Quintal)</label>
+                            <input type="number" step="0.001" class="form-control computed-field" name="weight_quintal" id="weight_quintal" readonly value="0">
+                            <small class="text-muted">Final / 100</small>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Weight (Khandi)</label>
+                            <input type="number" step="0.001" class="form-control computed-field" name="weight_khandi" id="weight_khandi" readonly value="0">
+                            <small class="text-muted">Final / 150</small>
+                        </div>
+                    </div>
+
+                    <!-- Row 3: Rate Basis, Rate Value, Total Purchase Amount -->
+                    <div class="row mb-4">
+                        <div class="col-md-4">
+                            <label class="form-label">Rate Calculate By</label>
+                            <select class="form-control calc-input" name="rate_basis" id="rate_basis">
+                                <option value="Quintal">Quintal</option>
+                                <option value="Khandi">Khandi</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Rate Value (₹)</label>
+                            <input type="number" step="0.01" class="form-control calc-input" name="rate_value" id="rate_value" value="0">
+                            <small class="text-muted">Per selected unit</small>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Total Purchase Amount (₹)</label>
+                            <input type="number" step="0.01" class="form-control computed-field" name="total_purchase_amount" id="total_purchase_amount" readonly value="0">
+                            <small class="text-muted">Weight × Rate</small>
+                        </div>
+                    </div>
+
+                    <div class="section-header">Deductions Section</div>
+
+                    <div style="background-color: #f8f9fa; padding: 15px; border-radius: 5px; margin-bottom: 15px;">
+                        <h6 style="margin-bottom: 10px; color: #333;">Category A: Direct ₹ Deductions</h6>
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label">Bank Commission</label>
+                                <input type="number" step="0.01" class="form-control calc-input" name="bank_commission" id="bank_commission" value="0">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Postage</label>
+                                <input type="number" step="0.01" class="form-control calc-input" name="postage" id="postage" value="0">
+                            </div>
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label">Freight</label>
+                                <input type="number" step="0.01" class="form-control calc-input" name="freight" id="freight" value="0">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Rate Diff.</label>
+                                <input type="number" step="0.01" class="form-control calc-input" name="rate_diff" id="rate_diff" value="0">
+                            </div>
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label">Quality Diff.</label>
+                                <input type="number" step="0.01" class="form-control calc-input" name="quality_diff" id="quality_diff" value="0">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Moisture Ded.</label>
+                                <input type="number" step="0.01" class="form-control calc-input" name="moisture_ded" id="moisture_ded" value="0">
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <label class="form-label">TDS</label>
+                                <input type="number" step="0.01" class="form-control calc-input" name="tds" id="tds" value="0">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div style="background-color: #f8f9fa; padding: 15px; border-radius: 5px; margin-bottom: 15px;">
+                        <h6 style="margin-bottom: 10px; color: #333;">Category B: Batav % Deduction</h6>
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label">Batav %</label>
+                                <input type="number" step="0.01" class="form-control calc-input" name="batav_percent" id="batav_percent" value="0">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Batav Amount (Auto)</label>
+                                <input type="number" step="0.01" class="form-control computed-field" id="batav" readonly value="0">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div style="background-color: #f8f9fa; padding: 15px; border-radius: 5px; margin-bottom: 15px;">
+                        <h6 style="margin-bottom: 10px; color: #333;">Category C: Fixed Formula Deductions</h6>
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label">Dalali Rate (per kg)</label>
+                                <input type="number" step="0.01" class="form-control calc-input" name="dalali_rate" id="dalali_rate" value="0">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Dalali Amount (Auto)</label>
+                                <input type="number" step="0.01" class="form-control computed-field" id="dalali" readonly value="0">
+                            </div>
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label">Hammali Rate (per kg)</label>
+                                <input type="number" step="0.01" class="form-control calc-input" name="hammali_rate" id="hammali_rate" value="0">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Hammali Amount (Auto)</label>
+                                <input type="number" step="0.01" class="form-control computed-field" id="hammali" readonly value="0">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row mb-4">
+                        <div class="col-md-12">
+                            <label class="form-label">Total Deduction</label>
+                            <input type="number" step="0.01" class="form-control computed-field" id="total_deduction" readonly value="0">
+                        </div>
+                    </div>
+
+                    <div class="section-header">Payable Section</div>
+                    <div class="row mb-4">
+                        <div class="col-md-12">
+                            <div class="payable-box">
+                                <span class="payable-label">Payable Amount:</span>
+                                <span class="payable-value">₹ <span id="payable_amount">0.00</span></span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="section-header">Comments & Additional Details</div>
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Payment Due Date</label>
+                            <input type="date" class="form-control" name="payment_due_date" id="payment_due_date">
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-12">
+                            <label class="form-label">Payment Due Comment</label>
+                            <textarea class="form-control" name="payment_due_comment" id="payment_due_comment" rows="2" placeholder="Enter payment due details"></textarea>
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-12">
+                            <label class="form-label">Quality Diff Comment</label>
+                            <textarea class="form-control" name="quality_diff_comment" id="quality_diff_comment" rows="2" placeholder="Explain quality difference"></textarea>
+                        </div>
+                    </div>
+                    <div class="row mb-4">
+                        <div class="col-md-10">
+                            <label class="form-label">Paddy Unloading Godown</label>
+                            <input
+                                type="text"
+                                class="form-control"
+                                name="paddy_unloading_godown"
+                                id="paddy_unloading_godown"
+                                list="godownList"
+                                placeholder="Type or select from dropdown"
+                                autocomplete="off"
+                            >
+                            <datalist id="godownList">
+                                <!-- Options will be loaded dynamically -->
+                            </datalist>
+                            <small class="form-text text-muted">Select existing or type a new godown name</small>
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label">&nbsp;</label>
+                            <button
+                                type="button"
+                                class="btn btn-success w-100"
+                                id="saveGodownBtn"
+                                title="Click to save new godown to database"
+                            >
+                                Save New Godown
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="section-header">Payment Instalments</div>
+                    <button type="button" class="btn btn-sm btn-success mb-3" id="addInstalmentBtn" onclick="addInstalment()">
+                        + Add Instalment
+                    </button>
+                    <div id="instalmentsContainer">
+
+                        <div class="card mb-3" id="instalment_1_card">
+                            <div class="card-header bg-light">Instalment 1</div>
+                            <div class="card-body">
+                                <div class="row mb-2">
+                                    <div class="col-md-3">
+                                        <label class="form-label">Date</label>
+                                        <input type="date" class="form-control" name="instalment_1_date" id="instalment_1_date">
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label class="form-label">Amount</label>
+                                        <input type="number" step="0.01" class="form-control" name="instalment_1_amount" id="instalment_1_amount" value="0">
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label class="form-label">Payment Method</label>
+                                        <select class="form-control" name="instalment_1_payment_method" id="instalment_1_payment_method">
+                                            <option value="">Select</option>
+                                            <option value="Cash">Cash</option>
+                                            <option value="Cheque">Cheque</option>
+                                            <option value="NEFT">NEFT</option>
+                                            <option value="RTGS">RTGS</option>
+                                            <option value="IMPS">IMPS</option>
+                                            <option value="UPI">UPI</option>
+                                            <option value="Bank Transfer">Bank Transfer</option>
+                                            <option value="Other">Other</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label class="form-label">Payment Bank Account</label>
+                                        <input type="text" class="form-control" name="instalment_1_payment_bank_account" id="instalment_1_payment_bank_account" placeholder="Bank name/account">
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-12">
+                                        <label class="form-label">Comment</label>
+                                        <input type="text" class="form-control" name="instalment_1_comment" id="instalment_1_comment" placeholder="Additional payment details">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="card mb-3" id="instalment_2_card" style="display: none;">
+                            <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                                <span>Instalment 2</span>
+                                <button type="button" class="btn btn-sm btn-danger" onclick="removeInstalment(2)">Remove</button>
+                            </div>
+                            <div class="card-body">
+                                <div class="row mb-2">
+                                    <div class="col-md-3">
+                                        <label class="form-label">Date</label>
+                                        <input type="date" class="form-control" name="instalment_2_date" id="instalment_2_date">
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label class="form-label">Amount</label>
+                                        <input type="number" step="0.01" class="form-control" name="instalment_2_amount" id="instalment_2_amount" value="0">
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label class="form-label">Payment Method</label>
+                                        <select class="form-control" name="instalment_2_payment_method" id="instalment_2_payment_method">
+                                            <option value="">Select</option>
+                                            <option value="Cash">Cash</option>
+                                            <option value="Cheque">Cheque</option>
+                                            <option value="NEFT">NEFT</option>
+                                            <option value="RTGS">RTGS</option>
+                                            <option value="IMPS">IMPS</option>
+                                            <option value="UPI">UPI</option>
+                                            <option value="Bank Transfer">Bank Transfer</option>
+                                            <option value="Other">Other</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label class="form-label">Payment Bank Account</label>
+                                        <input type="text" class="form-control" name="instalment_2_payment_bank_account" id="instalment_2_payment_bank_account" placeholder="Bank name/account">
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-12">
+                                        <label class="form-label">Comment</label>
+                                        <input type="text" class="form-control" name="instalment_2_comment" id="instalment_2_comment" placeholder="Additional payment details">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="card mb-3" id="instalment_3_card" style="display: none;">
+                            <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                                <span>Instalment 3</span>
+                                <button type="button" class="btn btn-sm btn-danger" onclick="removeInstalment(3)">Remove</button>
+                            </div>
+                            <div class="card-body">
+                                <div class="row mb-2">
+                                    <div class="col-md-3">
+                                        <label class="form-label">Date</label>
+                                        <input type="date" class="form-control" name="instalment_3_date" id="instalment_3_date">
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label class="form-label">Amount</label>
+                                        <input type="number" step="0.01" class="form-control" name="instalment_3_amount" id="instalment_3_amount" value="0">
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label class="form-label">Payment Method</label>
+                                        <select class="form-control" name="instalment_3_payment_method" id="instalment_3_payment_method">
+                                            <option value="">Select</option>
+                                            <option value="Cash">Cash</option>
+                                            <option value="Cheque">Cheque</option>
+                                            <option value="NEFT">NEFT</option>
+                                            <option value="RTGS">RTGS</option>
+                                            <option value="IMPS">IMPS</option>
+                                            <option value="UPI">UPI</option>
+                                            <option value="Bank Transfer">Bank Transfer</option>
+                                            <option value="Other">Other</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label class="form-label">Payment Bank Account</label>
+                                        <input type="text" class="form-control" name="instalment_3_payment_bank_account" id="instalment_3_payment_bank_account" placeholder="Bank name/account">
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-12">
+                                        <label class="form-label">Comment</label>
+                                        <input type="text" class="form-control" name="instalment_3_comment" id="instalment_3_comment" placeholder="Additional payment details">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="card mb-3" id="instalment_4_card" style="display: none;">
+                            <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                                <span>Instalment 4</span>
+                                <button type="button" class="btn btn-sm btn-danger" onclick="removeInstalment(4)">Remove</button>
+                            </div>
+                            <div class="card-body">
+                                <div class="row mb-2">
+                                    <div class="col-md-3">
+                                        <label class="form-label">Date</label>
+                                        <input type="date" class="form-control" name="instalment_4_date" id="instalment_4_date">
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label class="form-label">Amount</label>
+                                        <input type="number" step="0.01" class="form-control" name="instalment_4_amount" id="instalment_4_amount" value="0">
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label class="form-label">Payment Method</label>
+                                        <select class="form-control" name="instalment_4_payment_method" id="instalment_4_payment_method">
+                                            <option value="">Select</option>
+                                            <option value="Cash">Cash</option>
+                                            <option value="Cheque">Cheque</option>
+                                            <option value="NEFT">NEFT</option>
+                                            <option value="RTGS">RTGS</option>
+                                            <option value="IMPS">IMPS</option>
+                                            <option value="UPI">UPI</option>
+                                            <option value="Bank Transfer">Bank Transfer</option>
+                                            <option value="Other">Other</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label class="form-label">Payment Bank Account</label>
+                                        <input type="text" class="form-control" name="instalment_4_payment_bank_account" id="instalment_4_payment_bank_account" placeholder="Bank name/account">
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-12">
+                                        <label class="form-label">Comment</label>
+                                        <input type="text" class="form-control" name="instalment_4_comment" id="instalment_4_comment" placeholder="Additional payment details">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="card mb-4" id="instalment_5_card" style="display: none;">
+                            <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                                <span>Instalment 5</span>
+                                <button type="button" class="btn btn-sm btn-danger" onclick="removeInstalment(5)">Remove</button>
+                            </div>
+                            <div class="card-body">
+                                <div class="row mb-2">
+                                    <div class="col-md-3">
+                                        <label class="form-label">Date</label>
+                                        <input type="date" class="form-control" name="instalment_5_date" id="instalment_5_date">
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label class="form-label">Amount</label>
+                                        <input type="number" step="0.01" class="form-control" name="instalment_5_amount" id="instalment_5_amount" value="0">
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label class="form-label">Payment Method</label>
+                                        <select class="form-control" name="instalment_5_payment_method" id="instalment_5_payment_method">
+                                            <option value="">Select</option>
+                                            <option value="Cash">Cash</option>
+                                            <option value="Cheque">Cheque</option>
+                                            <option value="NEFT">NEFT</option>
+                                            <option value="RTGS">RTGS</option>
+                                            <option value="IMPS">IMPS</option>
+                                            <option value="UPI">UPI</option>
+                                            <option value="Bank Transfer">Bank Transfer</option>
+                                            <option value="Other">Other</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label class="form-label">Payment Bank Account</label>
+                                        <input type="text" class="form-control" name="instalment_5_payment_bank_account" id="instalment_5_payment_bank_account" placeholder="Bank name/account">
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-12">
+                                        <label class="form-label">Comment</label>
+                                        <input type="text" class="form-control" name="instalment_5_comment" id="instalment_5_comment" placeholder="Additional payment details">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="section-header">Signatures</div>
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Prepared By</label>
+                            <input type="text" class="form-control" name="prepared_by">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Authorised Sign</label>
+                            <input type="text" class="form-control" name="authorised_sign">
+                        </div>
+                    </div>
+
+                    <div class="d-flex gap-3 mt-4">
+                        <button type="submit" class="btn btn-primary btn-lg">Save & Print</button>
+                        <button type="button" class="btn btn-secondary btn-lg" id="clearBtn">Clear Form</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="/static/js/script.js"></script>
+</body>
+</html>

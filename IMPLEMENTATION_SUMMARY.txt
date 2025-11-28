@@ -1,0 +1,95 @@
+PURCHASE SLIP MANAGER - IMPLEMENTATION SUMMARY
+==============================================
+
+COMPLETED CHANGES:
+
+1. DATABASE SCHEMA UPDATE
+   - Dropped and recreated the purchase_slips table with 5 new deduction fields:
+     * freight (REAL DEFAULT 0)
+     * rate_diff (REAL DEFAULT 0)
+     * quality_diff (REAL DEFAULT 0)
+     * moisture_ded (REAL DEFAULT 0)
+     * tds (REAL DEFAULT 0)
+   - All existing fields retained
+   - Database automatically recreates on application start
+
+2. BACKEND CALCULATION LOGIC
+   - Updated calculate_fields() function in backend/routes/slips.py
+   - New deduction fields are properly extracted from request data
+   - Total deduction now includes all 10 deduction components:
+     * Bank Commission
+     * Batav (percentage-based)
+     * Shortage (percentage-based)
+     * Dalali (rate-based)
+     * Hammali (rate-based)
+     * Freight (new)
+     * Rate Diff. (new)
+     * Quality Diff. (new)
+     * Moisture Ded. (new)
+     * TDS (new)
+   - Payable Amount = Amount - Total Deduction
+   - Updated INSERT query to include new fields
+
+3. FRONTEND FORM
+   - Added 5 new input fields in the Deductions Section:
+     * Freight
+     * Rate Diff.
+     * Quality Diff.
+     * Moisture Ded.
+     * TDS
+   - All fields have calc-input class for automatic calculation
+   - Fields default to 0
+   - Total Deduction field moved to its own row for better visibility
+
+4. FRONTEND JAVASCRIPT
+   - Updated script.js to handle new deduction fields
+   - Added element references for all 5 new fields
+   - Updated calculateFields() function to include new deductions in total
+   - Form submission includes all new fields in data payload
+   - Real-time calculation updates as user enters values
+
+5. PRINT TEMPLATE
+   - Updated backend/templates/print_template.html
+   - Added display for all 5 new deduction fields
+   - Maintains consistent formatting with existing deductions
+   - All deductions show with currency symbol (₹)
+   - Total deduction and payable amount display correctly
+
+6. REPORTS PAGE
+   - No changes needed - already fetches all fields correctly
+   - Displays Bill No, Date, Party Name, Material, Net Weight, Payable Amount
+   - Search functionality works with party name and material
+   - Print and Delete buttons functional
+
+VERIFICATION RESULTS:
+--------------------
+✓ Database schema created successfully with 41 total columns
+✓ All 5 new deduction fields present in database
+✓ Calculation logic tested and working correctly
+✓ Sample data inserted and retrieved successfully
+✓ Reports query returns correct data
+✓ Payable amount properly calculates with all deductions
+
+CALCULATION FLOW:
+-----------------
+Net Weight = Bags × Avg Bag Weight
+Amount = Net Weight × Rate
+Batav = Amount × (Batav % / 100)
+Shortage = Amount × (Shortage % / 100)
+Dalali = Net Weight × Dalali Rate
+Hammali = Net Weight × Hammali Rate
+Total Deduction = Bank Commission + Batav + Shortage + Dalali + Hammali + 
+                  Freight + Rate Diff. + Quality Diff. + Moisture Ded. + TDS
+Payable Amount = Amount - Total Deduction
+
+ALL REQUIREMENTS MET:
+--------------------
+✓ Database fields match UI fields
+✓ Table dropped and recreated with new schema
+✓ Backend auto-creates table if it doesn't exist
+✓ All purchase slips displayed in reports
+✓ 5 new deduction fields added under Deductions Section
+✓ Calculation logic deducts all fields from total amount
+✓ Payable Amount updates dynamically on frontend
+✓ Payable Amount saved correctly in backend
+✓ All fields stored and retrieved from database

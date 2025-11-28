@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Purchase Slip - {{ slip.bill_no }}</title>
+  <style>
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        font-size: 8pt; /* GLOBAL FONT SIZE */
+    }
+
+    /* STRICT A4 PAGE FITTING - ALWAYS ONE PAGE */
+    @page {
+        size: A4 portrait;
+        margin: 10mm;
+    }
+
+    @media print {
+        @page {
+            size: A4;
+            margin: 10mm;
+        }
+        body {
+            margin: 0;
+            padding: 0;
+            max-width: 190mm;
+            overflow: hidden;
+            font-size: 8pt;
+        }
+        .no-print {
+            display: none !important;
+        }
+        .slip-container {
+            page-break-inside: avoid;
+            page-break-after: avoid;
+        }
+    }
+
+    html, body {
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+        font-size: 8pt;
+    }
+
+    body {
+        font-family: Arial, sans-serif;
+        line-height: 1.1;
+        color: #000;
+        background: #fff;
+        max-width: 190mm;
+        margin: 0 auto;
+        font-size: 8pt;
+    }
+
+    .slip-container {
+        border: 1.5px solid #000;
+        padding: 6px;
+        max-width: 100%;
+        max-height: 277mm;
+        overflow: hidden;
+        font-size: 8pt;
+    }
+
+    .header {
+        text-align: center;
+        border-bottom: 1.5px solid #000;
+        padding-bottom: 4px;
+        margin-bottom: 4px;
+        font-size: 8pt;
+    }
+
+    .header h1 {
+        font-size: 10pt; /* kept bigger for title */
+        margin-bottom: 2px;
+        line-height: 1;
+    }
+
+    .header p {
+        font-size: 8pt;
+        margin: 1px 0;
+        line-height: 1;
+    }
+
+    .slip-title {
+        text-align: center;
+        font-size: 9pt; 
+        font-weight: bold;
+        margin: 3px 0;
+        text-decoration: underline;
+        line-height: 1;
+    }
+
+    .info-row {
+        display: flex;
+        justify-content: space-between;
+        margin: 2px 0;
+        font-size: 8pt;
+        line-height: 1.5;
+    }
+
+    .info-row span {
+        flex: 1;
+        font-size: 10pt;
+    }
+
+    .section {
+        margin: 4px 0;
+        font-size: 8pt;
+    }
+
+    .section-title {
+        background: #000;
+        color: #fff;
+        padding: 2px 6px;
+        font-weight: bold;
+        font-size: 8pt;
+        margin: 4px 0 3px 0;
+        line-height: 1.2;
+    }
+
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 3px 0;
+        font-size: 8pt;
+    }
+
+    table, th, td {
+        border: 0.5px solid #000;
+    }
+
+    th, td {
+        padding: 2px 4px;
+        text-align: left;
+        line-height: 1.1;
+        font-size: 8pt;
+    }
+
+    th {
+        background: #e8e8e8;
+        font-weight: bold;
+        font-size: 8pt;
+    }
+
+    .text-right {
+        text-align: right;
+    }
+
+    .text-center {
+        text-align: center;
+    }
+
+    .total-row {
+        font-weight: bold;
+        background: #f5f5f5;
+        font-size: 8pt;
+    }
+
+    .final-amounts {
+        margin: 4px 0;
+        border: 1.5px solid #000;
+        padding: 4px;
+        background: #f9f9f9;
+        font-size: 8pt;
+    }
+
+    .final-amounts div {
+        display: flex;
+        justify-content: space-between;
+        padding: 2px 0;
+        font-size: 8pt;
+        line-height: 1.1;
+    }
+
+    .final-amounts .total-payable {
+        font-size: 9pt;
+        font-weight: bold;
+        border-top: 1.5px solid #000;
+        padding-top: 3px;
+        margin-top: 2px;
+    }
+
+    .balance-amount {
+        color: #2e7d32;
+        font-size: 8pt;
+        font-weight: bold;
+    }
+
+    .installments-table {
+        font-size: 8pt;
+    }
+
+    .installments-table th,
+    .installments-table td {
+        padding: 1px 3px;
+        font-size: 8pt;
+    }
+
+    .footer {
+        margin-top: 6px;
+        display: flex;
+        justify-content: space-between;
+        font-size: 8pt;
+    }
+
+    .signature {
+        text-align: center;
+        margin-top: 8px;
+        font-size: 8pt;
+    }
+
+    .signature-line {
+        border-top: 1px solid #000;
+        width: 150px;
+        margin: 0 auto;
+        padding-top: 3px;
+        font-size: 8pt;
+    }
+
+    .field-group {
+        margin: 3px 0;
+        padding: 3px;
+        border: 1px solid #ddd;
+        background: #fafafa;
+        font-size: 8pt;
+    }
+
+    .field-group-title {
+        font-weight: bold;
+        font-size: 8pt;
+        margin-bottom: 2px;
+        color: #333;
+    }
+
+    @media print {
+        html, body {
+            height: 297mm;
+            overflow: hidden;
+            font-size: 8pt;
+        }
+        .header h1 {
+            font-size: 10pt;
+        }
+        .slip-title {
+            font-size: 9pt;
+        }
+    }
+</style>
+
+</head>
+<body>
+    <div class="slip-container">
+        <div class="header">
+            <h1>{{ slip.company_name or 'COMPANY NAME' }}</h1>
+            <p>{{ slip.company_address or 'Company Address' }}</p>
+        </div>
+
+        <div class="slip-title">{{ slip.document_type or 'PURCHASE SLIP' }}</div>
+
+        <div class="info-row">
+            <span><strong>Bill No:</strong> {{ slip.bill_no }}</span>
+            <span><strong>Date:</strong> {{ slip.date }}</span>
+            <span><strong>Vehicle No:</strong> {{ slip.vehicle_no or '-' }}</span>
+        </div>
+
+        <div class="section-title">Party Details</div>
+        <div class="info-row">
+            <span><strong>Party Name:</strong> {{ slip.party_name or '-' }}</span>
+            <span><strong>Ticket No:</strong> {{ slip.ticket_no or '-' }}</span>
+        </div>
+        <div class="info-row">
+            <span><strong>Material:</strong> {{ slip.material_name or '-' }}</span>
+            <span><strong>Broker:</strong> {{ slip.broker or '-' }}</span>
+        </div>
+        <div class="info-row">
+            <span><strong>Terms of Delivery:</strong> {{ slip.terms_of_delivery or '-' }}</span>
+            <span><strong>Sup. Inv. No:</strong> {{ slip.sup_inv_no or '-' }}</span>
+        </div>
+        {% if slip.gst_no %}
+        <div class="info-row">
+            <span><strong>GST No:</strong> {{ slip.gst_no }}</span>
+        </div>
+        {% endif %}
+
+        <div class="section-title">Weight & Rate Details</div>
+        <table>
+            <tr>
+                <th>Bags</th>
+                <th>Net Weight (kg)</th>
+                {% if slip.shortage_kg and slip.shortage_kg > 0 %}
+                <th>Shortage (kg)</th>
+                {% endif %}
+                <th>Avg Bag Weight (kg)</th>
+                <th>Rate Basis</th>
+                <th>Rate (₹)</th>
+                <th>Amount (₹)</th>
+            </tr>
+            <tr>
+                <td class="text-center">{{ slip.bags }}</td>
+                <td class="text-right">{{ "%.2f"|format(slip.final_weight_kg) }}</td>
+                {% if slip.shortage_kg and slip.shortage_kg > 0 %}
+                <td class="text-right">{{ "%.2f"|format(slip.shortage_kg) }}</td>
+                {% endif %}
+                <td class="text-right">{{ "%.2f"|format(slip.avg_bag_weight) }}</td>
+                <td class="text-center">{{ slip.rate_basis or '100 kg' }}</td>
+                <td class="text-right">{{ "%.2f"|format(slip.rate_value) }}</td>
+                <td class="text-right">{{ "%.2f"|format(slip.total_purchase_amount) }}</td>
+            </tr>
+        </table>
+
+        <div class="section-title">Deductions</div>
+        <table>
+            <thead>
+                <tr>
+                    <!-- <th>Category</th> -->
+                    <th>Deduction Type</th>
+                    <th>Rate/Percentage</th>
+                    <th class="text-right">Amount (₹)</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% if slip.bank_commission and slip.bank_commission > 0 %}
+                <tr>
+                    <!-- <td>Direct ₹</td> -->
+                    <td>Bank Commission</td>
+                    <td>-</td>
+                    <td class="text-right">{{ "%.2f"|format(slip.bank_commission) }}</td>
+                </tr>
+                {% endif %}
+
+                {% if slip.postage and slip.postage > 0 %}
+                <tr>
+                    <!-- <td>Direct ₹</td> -->
+                    <td>Postage</td>
+                    <td>-</td>
+                    <td class="text-right">{{ "%.2f"|format(slip.postage) }}</td>
+                </tr>
+                {% endif %}
+
+                {% if slip.freight and slip.freight > 0 %}
+                <tr>
+                    <!-- <td>Direct ₹</td> -->
+                    <td>Freight</td>
+                    <td>-</td>
+                    <td class="text-right">{{ "%.2f"|format(slip.freight) }}</td>
+                </tr>
+                {% endif %}
+
+                {% if slip.rate_diff and slip.rate_diff > 0 %}
+                <tr>
+                    <!-- <td>Direct ₹</td> -->
+                    <td>Rate Difference</td>
+                    <td>-</td>
+                    <td class="text-right">{{ "%.2f"|format(slip.rate_diff) }}</td>
+                </tr>
+                {% endif %}
+
+                {% if slip.quality_diff and slip.quality_diff > 0 %}
+                <tr>
+                    <!-- <td>Direct ₹</td> -->
+                    <td>Quality Difference{% if slip.quality_diff_comment %}<br><small>({{ slip.quality_diff_comment }})</small>{% endif %}</td>
+                    <td>-</td>
+                    <td class="text-right">{{ "%.2f"|format(slip.quality_diff) }}</td>
+                </tr>
+                {% endif %}
+
+                {% if slip.moisture_ded and slip.moisture_ded > 0 %}
+                <tr>
+                    <!-- <td>Direct ₹</td> -->
+                    <td>Moisture Deduction</td>
+                    <td>{% if slip.moisture_ded_percent and slip.moisture_ded_percent > 0 %}{{ "%.2f"|format(slip.moisture_ded_percent) }}%{% else %}-{% endif %}</td>
+                    <td class="text-right">{{ "%.2f"|format(slip.moisture_ded) }}</td>
+                </tr>
+                {% endif %}
+
+                {% if slip.tds and slip.tds > 0 %}
+                <tr>
+                    <!-- <td>Direct ₹</td> -->
+                    <td>TDS</td>
+                    <td>-</td>
+                    <td class="text-right">{{ "%.2f"|format(slip.tds) }}</td>
+                </tr>
+                {% endif %}
+
+                {% if slip.batav and slip.batav > 0 %}
+                <tr>
+                    <!-- <td>Percentage</td> -->
+                    <td>Batav</td>
+                    <td>{{ "%.2f"|format(slip.batav_percent) }}%</td>
+                    <td class="text-right">{{ "%.2f"|format(slip.batav) }}</td>
+                </tr>
+                {% endif %}
+
+                {% if slip.dalali and slip.dalali > 0 %}
+                <tr>
+                    <!-- <td>Formula</td> -->
+                    <td>Dalali</td>
+                    <td>₹{{ "%.2f"|format(slip.dalali_rate) }}/kg</td>
+                    <td class="text-right">{{ "%.2f"|format(slip.dalali) }}</td>
+                </tr>
+                {% endif %}
+
+                {% if slip.hammali and slip.hammali > 0 %}
+                <tr>
+                    <!-- <td>Formula</td> -->
+                    <td>Hammali</td>
+                    <td>₹{{ "%.2f"|format(slip.hammali_rate) }}/kg</td>
+                    <td class="text-right">{{ "%.2f"|format(slip.hammali) }}</td>
+                </tr>
+                {% endif %}
+
+                <tr class="total-row">
+                    <td colspan="2"><strong>Total Deductions</strong></td>
+                    <td class="text-right"><strong>{{ "%.2f"|format(slip.total_deduction) }}</strong></td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="final-amounts">
+            <div>
+                <span>Gross Amount:</span>
+                <span>₹ {{ "%.2f"|format(slip.total_purchase_amount) }}</span>
+            </div>
+            <div>
+                <span>Total Deductions:</span>
+                <span>₹ {{ "%.2f"|format(slip.total_deduction) }}</span>
+            </div>
+            <div class="total-payable">
+                <span>NET PAYABLE AMOUNT:</span>
+                <span>₹ {{ "%.2f"|format(slip.payable_amount) }}</span>
+            </div>
+        </div>
+
+        <div class="section-title" style="background: #2e7d32; margin-top: 15px;">💰 PAYMENT SUMMARY</div>
+        <table style="border: 2px solid #2e7d32; background: #e8f5e9;">
+            <tr style="font-size: 10pt;">
+                <td style="font-weight: bold; width: 60%;">Payable Amount:</td>
+                <td class="text-right" style="font-weight: bold;">₹ {{ "%.2f"|format(slip.payable_amount or 0) }}</td>
+            </tr>
+            <tr style="font-size: 10pt;">
+                <td style="font-weight: bold;">Total Paid Amount:</td>
+                <td class="text-right" style="font-weight: bold;">₹ {{ "%.2f"|format(slip.total_paid_amount or 0) }}</td>
+            </tr>
+            <tr style="font-size: 11pt; background: #c8e6c9;">
+                <td style="font-weight: bold;">Balance Amount:</td>
+                <td class="text-right" style="font-weight: bold; color: #1b5e20;">₹ {{ "%.2f"|format(slip.balance_amount or 0) }}</td>
+            </tr>
+        </table>
+
+        {% if slip.payment_due_date %}
+        <div class="field-group">
+            <div class="field-group-title">Payment Due Information</div>
+            <div class="info-row">
+                <span><strong>Due Date:</strong> {{ slip.payment_due_date }}</span>
+            </div>
+            {% if slip.payment_due_comment %}
+            <div style="margin-top: 5px; font-size: 8pt;">
+                <strong>Comment:</strong> {{ slip.payment_due_comment }}
+            </div>
+            {% endif %}
+        </div>
+        {% endif %}
+
+        {% set has_instalments = slip.instalment_1_date or slip.instalment_1_amount or slip.instalment_1_comment or slip.instalment_2_date or slip.instalment_2_amount or slip.instalment_2_comment or slip.instalment_3_date or slip.instalment_3_amount or slip.instalment_3_comment or slip.instalment_4_date or slip.instalment_4_amount or slip.instalment_4_comment or slip.instalment_5_date or slip.instalment_5_amount or slip.instalment_5_comment %}
+        {% if has_instalments %}
+        <div class="section-title">Payment Instalments</div>
+        <table class="installments-table">
+            <thead>
+                <tr>
+                    <th style="width: 6%;">Sr</th>
+                    <th style="width: 18%;">Date</th>
+                    <th style="width: 18%;">Amount</th>
+                    <th style="width: 16%;">Method</th>
+                    <th style="width: 20%;">Bank Account</th>
+                    <th style="width: 22%;">Comment</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for i in range(1, 6) %}
+                    {% set date_field = 'instalment_' ~ i ~ '_date' %}
+                    {% set amount_field = 'instalment_' ~ i ~ '_amount' %}
+                    {% set method_field = 'instalment_' ~ i ~ '_payment_method' %}
+                    {% set bank_field = 'instalment_' ~ i ~ '_payment_bank_account' %}
+                    {% set comment_field = 'instalment_' ~ i ~ '_comment' %}
+                    {% set date = slip[date_field] %}
+                    {% set amount = slip[amount_field] or 0 %}
+                    {% set method = slip[method_field] %}
+                    {% set bank = slip[bank_field] %}
+                    {% set comment = slip[comment_field] %}
+                    {% if date or amount > 0 or comment or method or bank %}
+                <tr>
+                    <td class="text-center">{{ i }}</td>
+                    <td>{{ date if date else '-' }}</td>
+                    <td class="text-right">{{ ("₹%.2f"|format(amount)) if amount > 0 else '-' }}</td>
+                    <td>{{ method if method else '-' }}</td>
+                    <td>{{ bank if bank else '-' }}</td>
+                    <td>{{ comment if comment else '-' }}</td>
+                </tr>
+                    {% endif %}
+                {% endfor %}
+            </tbody>
+        </table>
+        {% endif %}
+
+        {% if slip.paddy_unloading_godown %}
+        <div class="field-group">
+            <div class="field-group-title">Paddy Unloading Godown</div>
+            <div style="font-size: 8pt; line-height: 1.3;">
+                {{ slip.paddy_unloading_godown }}
+            </div>
+        </div>
+        {% endif %}
+
+        <div class="footer">
+            <div class="signature">
+                <div style="margin-bottom:15px;"></div>
+                <div class="signature-line">Prepared By<br>{{ slip.prepared_by or '_________________' }}</div>
+            </div>
+            <div class="signature">
+                <div style="margin-bottom:15px;"></div>
+                <div class="signature-line">Authorized Signatory<br>{{ slip.authorised_sign or '_________________' }}</div>
+            </div>
+        </div>
+    </div>
+
+    <!--
+        Print handling:
+        - For Electron: Main process triggers print dialog via webContents.print()
+        - For browser: Auto-print on load (uncomment below for browser usage)
+    -->
+    <script>
+        // Uncomment for browser-based printing (not needed for Electron)
+        // window.onload = function() {
+        //     window.print();
+        // };
+    </script>
+</body>
+</html>
