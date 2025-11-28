@@ -6,6 +6,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from database import get_db_connection, get_next_bill_no
 from datetime import datetime
+from pytz import timezone
 
 slips_bp = Blueprint('slips', __name__)
 
@@ -23,6 +24,27 @@ def safe_date(value):
     if value in (None, '', ' '):
         return None
     return value
+
+def get_ist_datetime():
+    """Get current datetime in IST timezone"""
+    ist = timezone('Asia/Kolkata')
+    return datetime.now(ist)
+
+def format_ist_datetime(dt):
+    """Format datetime in IST timezone"""
+    if dt is None:
+        return None
+    ist = timezone('Asia/Kolkata')
+    if isinstance(dt, str):
+        try:
+            dt = datetime.fromisoformat(dt.replace('Z', '+00:00'))
+        except:
+            return dt
+    if dt.tzinfo is None:
+        dt = ist.localize(dt)
+    else:
+        dt = dt.astimezone(ist)
+    return dt.strftime('%Y-%m-%d %H:%M:%S')
 
 
 def calculate_payment_totals(data):
@@ -133,9 +155,11 @@ def add_slip():
         conn = get_db_connection()
         cursor = conn.cursor()
 
+        current_timestamp = get_ist_datetime()
+
         cursor.execute('''
             INSERT INTO purchase_slips (
-                company_name, company_address, document_type, vehicle_no, date,
+                company_name, company_address, document_type, vehicle_no, date, created_at,
                 bill_no, party_name, material_name, ticket_no, broker,
                 terms_of_delivery, sup_inv_no, gst_no,
                 bags, avg_bag_weight,
@@ -152,13 +176,14 @@ def add_slip():
                 instalment_4_date, instalment_4_amount, instalment_4_payment_method, instalment_4_payment_bank_account, instalment_4_comment,
                 instalment_5_date, instalment_5_amount, instalment_5_payment_method, instalment_5_payment_bank_account, instalment_5_comment,
                 prepared_by, authorised_sign, paddy_unloading_godown
-            ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+            ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
         ''', (
             data.get('company_name', ''),
             data.get('company_address', ''),
             data.get('document_type', 'Purchase Slip'),
             data.get('vehicle_no', ''),
             safe_date(data.get('date')),
+            current_timestamp,
             bill_no,
             data.get('party_name', ''),
             data.get('material_name', ''),
@@ -271,6 +296,12 @@ def get_slips():
             slip['balance_amount'] = balance_amount
             slip['amount'] = safe_float(slip.get('amount', 0), 0)
 
+            # Format timestamps to IST
+            if slip.get('created_at'):
+                slip['created_at'] = format_ist_datetime(slip['created_at'])
+            if slip.get('date'):
+                slip['date'] = str(slip['date'])
+
         return jsonify({
             'success': True,
             'slips': slips
@@ -310,6 +341,12 @@ def get_slip(slip_id):
         total_paid, balance_amount = calculate_payment_totals(slip)
         slip['total_paid_amount'] = total_paid
         slip['balance_amount'] = balance_amount
+
+        # Format timestamps to IST
+        if slip.get('created_at'):
+            slip['created_at'] = format_ist_datetime(slip['created_at'])
+        if slip.get('date'):
+            slip['date'] = str(slip['date'])
 
         return jsonify({
             'success': True,
@@ -519,6 +556,12 @@ def print_slip(slip_id):
         total_paid, balance_amount = calculate_payment_totals(slip)
         slip['total_paid_amount'] = total_paid
         slip['balance_amount'] = balance_amount
+
+        # Format timestamps to IST for printing
+        if slip.get('created_at'):
+            slip['created_at_formatted'] = format_ist_datetime(slip['created_at'])
+        if slip.get('date'):
+            slip['date'] = str(slip['date'])
 
         return render_template('print_template_new.html', slip=slip)
 

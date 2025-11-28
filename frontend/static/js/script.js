@@ -187,7 +187,9 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         } catch (error) {
             console.error('Error:', error);
-            alert('Error saving purchase slip: ' + error.message);
+            if (error.message && !error.message.includes('setting \'value\'')) {
+                alert('Error saving purchase slip: ' + error.message);
+            }
         }
     });
 
@@ -286,7 +288,9 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     // Attach click event to Save button
-    saveGodownBtn.addEventListener('click', saveNewGodown);
+    if (saveGodownBtn) {
+        saveGodownBtn.addEventListener('click', saveNewGodown);
+    }
 
     // Load godowns when page loads
     loadGodowns();

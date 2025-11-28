@@ -806,7 +806,7 @@
                         const row = `
                             <tr>
                                 <td>${slip.bill_no}</td>
-                                <td>${slip.date}</td>
+                                <td>${slip.date}${slip.created_at ? '<br><small style="color: #666;">' + slip.created_at + ' IST</small>' : ''}</td>
                                 <td>${slip.party_name || '-'}</td>
                                 <td>${parseFloat(slip.final_weight_kg || 0).toFixed(2)}</td>
                                 <td>${slip.rate_basis || 'Quintal'}</td>
@@ -894,6 +894,7 @@
                                 <table class="view-table">
                                     <tr><td>Bill No</td><td>${slip.bill_no}</td></tr>
                                     <tr><td>Date</td><td>${slip.date}</td></tr>
+                                    ${slip.created_at ? `<tr><td>Created At</td><td>${slip.created_at} IST</td></tr>` : ''}
                                     <tr><td>Vehicle No</td><td>${slip.vehicle_no || '-'}</td></tr>
                                     <tr><td>Party Name</td><td>${slip.party_name || '-'}</td></tr>
                                     <tr><td>Material</td><td>${slip.material_name || '-'}</td></tr>
