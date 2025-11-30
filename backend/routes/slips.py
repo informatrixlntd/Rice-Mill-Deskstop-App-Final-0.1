@@ -183,6 +183,7 @@ def add_slip():
     cursor = None
     try:
         data = request.json
+        print("📝 Incoming slip data:", {k: v for k, v in data.items() if k in ['party_name', 'date', 'bags', 'net_weight_kg']})
         data = calculate_fields(data)
 
         bill_no = get_next_bill_no()
@@ -191,6 +192,8 @@ def add_slip():
         cursor = conn.cursor()
 
         slip_date = parse_datetime_to_ist(data.get('date')) or get_ist_datetime()
+
+        print(f"✓ Calculated fields: payable={data.get('payable_amount')}, total_purchase={data.get('total_purchase_amount')}")
 
         cursor.execute('''
             INSERT INTO purchase_slips (
@@ -211,7 +214,7 @@ def add_slip():
                 instalment_4_date, instalment_4_amount, instalment_4_payment_method, instalment_4_payment_bank_account, instalment_4_comment,
                 instalment_5_date, instalment_5_amount, instalment_5_payment_method, instalment_5_payment_bank_account, instalment_5_comment,
                 prepared_by, authorised_sign, paddy_unloading_godown
-            ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+            ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
         ''', (
             data.get('company_name', ''),
             data.get('company_address', ''),
@@ -292,6 +295,8 @@ def add_slip():
         slip_id = cursor.lastrowid
         conn.commit()
 
+        print(f"✅ Slip saved successfully: ID={slip_id}, Bill No={bill_no}")
+
         return jsonify({
             'success': True,
             'message': 'Purchase slip saved successfully',
@@ -300,7 +305,9 @@ def add_slip():
         }), 201
 
     except Exception as e:
-        print(f"Error adding slip: {e}")
+        print(f"❌ Error adding slip: {e}")
+        import traceback
+        traceback.print_exc()
         return jsonify({
             'success': False,
             'message': str(e)

@@ -220,39 +220,64 @@ document.addEventListener('DOMContentLoaded', function() {
     const saveGodownBtn = document.getElementById('saveGodownBtn');
     let allGodowns = [];
 
+    console.log('Godown elements:', {
+        input: godownInput ? 'found' : 'NOT FOUND',
+        datalist: godownDatalist ? 'found' : 'NOT FOUND',
+        button: saveGodownBtn ? 'found' : 'NOT FOUND'
+    });
+
     // Load existing godowns on page load
     async function loadGodowns() {
         try {
+            console.log('📥 Fetching godowns from /api/unloading-godowns...');
             const response = await fetch('/api/unloading-godowns');
+            console.log('Response status:', response.status);
+
             const result = await response.json();
+            console.log('Response data:', result);
 
             if (result.success && result.godowns) {
                 allGodowns = result.godowns;
                 updateGodownDatalist();
-                console.log(`✓ Loaded ${allGodowns.length} godowns`);
+                console.log(`✓ Loaded ${allGodowns.length} godowns:`, allGodowns);
             } else {
-                console.warn('No godowns returned from API');
+                console.warn('No godowns returned from API:', result);
                 allGodowns = [];
             }
         } catch (error) {
-            console.error('Error loading godowns:', error);
+            console.error('❌ Error loading godowns:', error);
             allGodowns = [];
         }
     }
 
     // Update datalist with godown options
     function updateGodownDatalist() {
+        if (!godownDatalist) {
+            console.error('❌ godownDatalist element not found!');
+            return;
+        }
+
         godownDatalist.innerHTML = '';
         allGodowns.forEach(godown => {
             const option = document.createElement('option');
             option.value = godown.name;
             godownDatalist.appendChild(option);
         });
+        console.log(`✓ Updated datalist with ${allGodowns.length} options`);
     }
 
     // Save new godown when button is clicked
     async function saveNewGodown() {
+        console.log('🔘 Save Godown button clicked');
+
+        if (!godownInput) {
+            console.error('❌ godownInput element not found!');
+            alert('Error: Godown input field not found');
+            return;
+        }
+
         const enteredValue = godownInput.value.trim();
+        console.log('Entered value:', enteredValue);
 
         if (!enteredValue) {
             alert('Please enter a godown name');
@@ -272,6 +297,8 @@ document.addEventListener('DOMContentLoaded', function() {
             saveGodownBtn.disabled = true;
             saveGodownBtn.textContent = 'Saving...';
 
+            console.log('📤 Sending POST request to /api/unloading-godowns with:', { name: enteredValue });
+
             const response = await fetch('/api/unloading-godowns', {
                 method: 'POST',
                 headers: {
@@ -280,7 +307,9 @@ document.addEventListener('DOMContentLoaded', function() {
                 body: JSON.stringify({ name: enteredValue })
             });
 
+            console.log('Response status:', response.status);
             const result = await response.json();
+            console.log('Response data:', result);
 
             if (result.success) {
                 console.log(`✓ Added new godown: ${enteredValue}`);
@@ -295,21 +324,31 @@ document.addEventListener('DOMContentLoaded', function() {
                 alert('Error saving godown: ' + result.message);
             }
         } catch (error) {
-            console.error('Error adding godown:', error);
+            console.error('❌ Error adding godown:', error);
             alert('Error saving godown. Please try again.');
         } finally {
-            saveGodownBtn.disabled = false;
-            saveGodownBtn.textContent = 'Save New Godown';
+            if (saveGodownBtn) {
+                saveGodownBtn.disabled = false;
+                saveGodownBtn.textContent = 'Save New Godown';
+            }
         }
     }
 
     // Attach click event to Save button
     if (saveGodownBtn) {
+        console.log('✓ Attaching click handler to Save Godown button');
         saveGodownBtn.addEventListener('click', saveNewGodown);
+    } else {
+        console.error('❌ Cannot attach click handler - saveGodownBtn not found');
     }
 
     // Load godowns when page loads
-    loadGodowns();
+    if (godownInput && godownDatalist) {
+        console.log('✓ Godown elements found, loading godowns...');
+        loadGodowns();
+    } else {
+        console.error('❌ Godown elements missing, skipping loadGodowns()');
+    }
 });
 
 // ===== DYNAMIC INSTALMENT MANAGEMENT =====
