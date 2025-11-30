@@ -19,32 +19,67 @@ def safe_float(value, default=0.0):
     except (TypeError, ValueError):
         return default
 
-def safe_date(value):
-    """Safely convert value to date, return None if empty"""
-    if value in (None, '', ' '):
-        return None
-    return value
-
 def get_ist_datetime():
     """Get current datetime in IST timezone"""
     ist = timezone('Asia/Kolkata')
     return datetime.now(ist)
 
+def parse_datetime_to_ist(value):
+    """Parse date/datetime string and convert to IST datetime object"""
+    if value in (None, '', ' '):
+        return None
+
+    ist = timezone('Asia/Kolkata')
+
+    if isinstance(value, datetime):
+        if value.tzinfo is None:
+            return ist.localize(value)
+        return value.astimezone(ist)
+
+    if isinstance(value, str):
+        try:
+            if 'T' in value or ' ' in value:
+                dt = datetime.fromisoformat(value.replace('Z', '+00:00'))
+            else:
+                dt = datetime.strptime(value, '%Y-%m-%d')
+                dt = dt.replace(hour=0, minute=0, second=0)
+
+            if dt.tzinfo is None:
+                dt = ist.localize(dt)
+            else:
+                dt = dt.astimezone(ist)
+
+            return dt.replace(tzinfo=None)
+        except:
+            return None
+
+    return None
+
 def format_ist_datetime(dt):
-    """Format datetime in IST timezone"""
+    """Format datetime to IST display format DD-MM-YYYY HH:MM"""
     if dt is None:
         return None
+
     ist = timezone('Asia/Kolkata')
+
     if isinstance(dt, str):
         try:
             dt = datetime.fromisoformat(dt.replace('Z', '+00:00'))
         except:
-            return dt
-    if dt.tzinfo is None:
-        dt = ist.localize(dt)
-    else:
-        dt = dt.astimezone(ist)
-    return dt.strftime('%Y-%m-%d %H:%M:%S')
+            try:
+                dt = datetime.strptime(dt, '%Y-%m-%d')
+            except:
+                return dt
+
+    if isinstance(dt, datetime):
+        if dt.tzinfo is None:
+            dt = ist.localize(dt)
+        else:
+            dt = dt.astimezone(ist)
+
+        return dt.strftime('%d-%m-%Y %H:%M')
+
+    return None
 
 
 def calculate_payment_totals(data):
@@ -155,11 +190,11 @@ def add_slip():
         conn = get_db_connection()
         cursor = conn.cursor()
 
-        current_timestamp = get_ist_datetime()
+        slip_date = parse_datetime_to_ist(data.get('date')) or get_ist_datetime()
 
         cursor.execute('''
             INSERT INTO purchase_slips (
-                company_name, company_address, document_type, vehicle_no, date, created_at,
+                company_name, company_address, document_type, vehicle_no, date,
                 bill_no, party_name, material_name, ticket_no, broker,
                 terms_of_delivery, sup_inv_no, gst_no,
                 bags, avg_bag_weight,
@@ -182,8 +217,7 @@ def add_slip():
             data.get('company_address', ''),
             data.get('document_type', 'Purchase Slip'),
             data.get('vehicle_no', ''),
-            safe_date(data.get('date')),
-            current_timestamp,
+            slip_date,
             bill_no,
             data.get('party_name', ''),
             data.get('material_name', ''),
@@ -221,31 +255,31 @@ def add_slip():
             safe_float(data.get('total_deduction', 0), 0),
             safe_float(data.get('payable_amount', 0), 0),
             # Instalment 1
-            safe_date(data.get('instalment_1_date')),
+            parse_datetime_to_ist(data.get('instalment_1_date')),
             safe_float(data.get('instalment_1_amount', 0), 0),
             data.get('instalment_1_payment_method', ''),
             data.get('instalment_1_payment_bank_account', ''),
             data.get('instalment_1_comment', ''),
             # Instalment 2
-            safe_date(data.get('instalment_2_date')),
+            parse_datetime_to_ist(data.get('instalment_2_date')),
             safe_float(data.get('instalment_2_amount', 0), 0),
             data.get('instalment_2_payment_method', ''),
             data.get('instalment_2_payment_bank_account', ''),
             data.get('instalment_2_comment', ''),
             # Instalment 3
-            safe_date(data.get('instalment_3_date')),
+            parse_datetime_to_ist(data.get('instalment_3_date')),
             safe_float(data.get('instalment_3_amount', 0), 0),
             data.get('instalment_3_payment_method', ''),
             data.get('instalment_3_payment_bank_account', ''),
             data.get('instalment_3_comment', ''),
             # Instalment 4
-            safe_date(data.get('instalment_4_date')),
+            parse_datetime_to_ist(data.get('instalment_4_date')),
             safe_float(data.get('instalment_4_amount', 0), 0),
             data.get('instalment_4_payment_method', ''),
             data.get('instalment_4_payment_bank_account', ''),
             data.get('instalment_4_comment', ''),
             # Instalment 5
-            safe_date(data.get('instalment_5_date')),
+            parse_datetime_to_ist(data.get('instalment_5_date')),
             safe_float(data.get('instalment_5_amount', 0), 0),
             data.get('instalment_5_payment_method', ''),
             data.get('instalment_5_payment_bank_account', ''),
@@ -279,32 +313,47 @@ def add_slip():
 
 @slips_bp.route('/api/slips', methods=['GET'])
 def get_slips():
-    """Get all purchase slips with calculated Total Paid and Balance"""
+    """Get all purchase slips with calculated Total Paid and Balance - optimized for list view"""
     conn = None
     cursor = None
     try:
         conn = get_db_connection()
         cursor = conn.cursor(dictionary=True)
 
-        cursor.execute('SELECT * FROM purchase_slips ORDER BY id DESC')
+        page = int(request.args.get('page', 1))
+        limit = int(request.args.get('limit', 50))
+        offset = (page - 1) * limit
+
+        cursor.execute('''
+            SELECT id, bill_no, date, party_name, final_weight_kg, rate_basis,
+                   payable_amount, instalment_1_amount, instalment_2_amount,
+                   instalment_3_amount, instalment_4_amount, instalment_5_amount
+            FROM purchase_slips
+            ORDER BY id DESC
+            LIMIT %s OFFSET %s
+        ''', (limit, offset))
         slips = cursor.fetchall()
 
-        # Calculate Total Paid and Balance for each slip
+        cursor.execute('SELECT COUNT(*) as total FROM purchase_slips')
+        total_count = cursor.fetchone()['total']
+
         for slip in slips:
             total_paid, balance_amount = calculate_payment_totals(slip)
             slip['total_paid_amount'] = total_paid
             slip['balance_amount'] = balance_amount
-            slip['amount'] = safe_float(slip.get('amount', 0), 0)
 
-            # Format timestamps to IST
-            if slip.get('created_at'):
-                slip['created_at'] = format_ist_datetime(slip['created_at'])
             if slip.get('date'):
-                slip['date'] = str(slip['date'])
+                slip['date'] = format_ist_datetime(slip['date'])
 
         return jsonify({
             'success': True,
-            'slips': slips
+            'slips': slips,
+            'pagination': {
+                'page': page,
+                'limit': limit,
+                'total': total_count,
+                'pages': (total_count + limit - 1) // limit
+            }
         }), 200
 
     except Exception as e:
@@ -342,11 +391,14 @@ def get_slip(slip_id):
         slip['total_paid_amount'] = total_paid
         slip['balance_amount'] = balance_amount
 
-        # Format timestamps to IST
-        if slip.get('created_at'):
-            slip['created_at'] = format_ist_datetime(slip['created_at'])
-        if slip.get('date'):
-            slip['date'] = str(slip['date'])
+        # Format all datetime fields to IST
+        datetime_fields = ['date', 'payment_date', 'payment_due_date',
+                          'instalment_1_date', 'instalment_2_date', 'instalment_3_date',
+                          'instalment_4_date', 'instalment_5_date']
+
+        for field in datetime_fields:
+            if slip.get(field):
+                slip[field] = format_ist_datetime(slip[field])
 
         return jsonify({
             'success': True,
@@ -416,7 +468,7 @@ def update_slip(slip_id):
             merged_data.get('company_address', ''),
             merged_data.get('document_type', 'Purchase Slip'),
             merged_data.get('vehicle_no', ''),
-            merged_data.get('date'),
+            parse_datetime_to_ist(merged_data.get('date')),
             merged_data.get('party_name', ''),
             merged_data.get('material_name', ''),
             merged_data.get('ticket_no', ''),
@@ -453,31 +505,31 @@ def update_slip(slip_id):
             safe_float(merged_data.get('total_deduction', 0), 0),
             safe_float(merged_data.get('payable_amount', 0), 0),
             # Instalment 1
-            safe_date(merged_data.get('instalment_1_date')),
+            parse_datetime_to_ist(merged_data.get('instalment_1_date')),
             safe_float(merged_data.get('instalment_1_amount', 0), 0),
             merged_data.get('instalment_1_payment_method', ''),
             merged_data.get('instalment_1_payment_bank_account', ''),
             merged_data.get('instalment_1_comment', ''),
             # Instalment 2
-            safe_date(merged_data.get('instalment_2_date')),
+            parse_datetime_to_ist(merged_data.get('instalment_2_date')),
             safe_float(merged_data.get('instalment_2_amount', 0), 0),
             merged_data.get('instalment_2_payment_method', ''),
             merged_data.get('instalment_2_payment_bank_account', ''),
             merged_data.get('instalment_2_comment', ''),
             # Instalment 3
-            safe_date(merged_data.get('instalment_3_date')),
+            parse_datetime_to_ist(merged_data.get('instalment_3_date')),
             safe_float(merged_data.get('instalment_3_amount', 0), 0),
             merged_data.get('instalment_3_payment_method', ''),
             merged_data.get('instalment_3_payment_bank_account', ''),
             merged_data.get('instalment_3_comment', ''),
             # Instalment 4
-            safe_date(merged_data.get('instalment_4_date')),
+            parse_datetime_to_ist(merged_data.get('instalment_4_date')),
             safe_float(merged_data.get('instalment_4_amount', 0), 0),
             merged_data.get('instalment_4_payment_method', ''),
             merged_data.get('instalment_4_payment_bank_account', ''),
             merged_data.get('instalment_4_comment', ''),
             # Instalment 5
-            safe_date(merged_data.get('instalment_5_date')),
+            parse_datetime_to_ist(merged_data.get('instalment_5_date')),
             safe_float(merged_data.get('instalment_5_amount', 0), 0),
             merged_data.get('instalment_5_payment_method', ''),
             merged_data.get('instalment_5_payment_bank_account', ''),
@@ -557,11 +609,14 @@ def print_slip(slip_id):
         slip['total_paid_amount'] = total_paid
         slip['balance_amount'] = balance_amount
 
-        # Format timestamps to IST for printing
-        if slip.get('created_at'):
-            slip['created_at_formatted'] = format_ist_datetime(slip['created_at'])
-        if slip.get('date'):
-            slip['date'] = str(slip['date'])
+        # Format all datetime fields to IST for printing
+        datetime_fields = ['date', 'payment_date', 'payment_due_date',
+                          'instalment_1_date', 'instalment_2_date', 'instalment_3_date',
+                          'instalment_4_date', 'instalment_5_date']
+
+        for field in datetime_fields:
+            if slip.get(field):
+                slip[f'{field}_formatted'] = format_ist_datetime(slip[field])
 
         return render_template('print_template_new.html', slip=slip)
 

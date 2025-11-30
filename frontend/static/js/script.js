@@ -31,7 +31,10 @@ document.addEventListener('DOMContentLoaded', function() {
     const payableAmount = document.getElementById('payable_amount');
     const paymentAmount = document.getElementById('payment_amount');
 
-    dateInput.valueAsDate = new Date();
+    const now = new Date();
+    const istOffset = 5.5 * 60 * 60 * 1000;
+    const istTime = new Date(now.getTime() + istOffset);
+    dateInput.value = istTime.toISOString().slice(0, 16);
     fetchNextBillNo();
 
     function fetchNextBillNo() {
@@ -179,7 +182,10 @@ document.addEventListener('DOMContentLoaded', function() {
                 alert('Purchase slip saved successfully!');
                 window.open(`/print/${result.slip_id}`, '_blank');
                 form.reset();
-                dateInput.valueAsDate = new Date();
+                const now = new Date();
+                const istOffset = 5.5 * 60 * 60 * 1000;
+                const istTime = new Date(now.getTime() + istOffset);
+                dateInput.value = istTime.toISOString().slice(0, 16);
                 fetchNextBillNo();
                 calculateFields();
             } else {
@@ -196,7 +202,10 @@ document.addEventListener('DOMContentLoaded', function() {
     clearBtn.addEventListener('click', function() {
         if (confirm('Are you sure you want to clear the form?')) {
             form.reset();
-            dateInput.valueAsDate = new Date();
+            const now = new Date();
+            const istOffset = 5.5 * 60 * 60 * 1000;
+            const istTime = new Date(now.getTime() + istOffset);
+            dateInput.value = istTime.toISOString().slice(0, 16);
             fetchNextBillNo();
             calculateFields();
         }
@@ -217,13 +226,17 @@ document.addEventListener('DOMContentLoaded', function() {
             const response = await fetch('/api/unloading-godowns');
             const result = await response.json();
 
-            if (result.success) {
+            if (result.success && result.godowns) {
                 allGodowns = result.godowns;
                 updateGodownDatalist();
                 console.log(`✓ Loaded ${allGodowns.length} godowns`);
+            } else {
+                console.warn('No godowns returned from API');
+                allGodowns = [];
             }
         } catch (error) {
             console.error('Error loading godowns:', error);
+            allGodowns = [];
         }
     }
 
@@ -271,10 +284,13 @@ document.addEventListener('DOMContentLoaded', function() {
 
             if (result.success) {
                 console.log(`✓ Added new godown: ${enteredValue}`);
-                allGodowns = result.godowns; // Update with new list from server
+                if (result.godowns && Array.isArray(result.godowns)) {
+                    allGodowns = result.godowns;
+                } else if (result.godown) {
+                    allGodowns.push(result.godown);
+                }
                 updateGodownDatalist();
                 alert(`Godown "${enteredValue}" saved successfully!`);
-                // Keep the value selected in the input
             } else {
                 alert('Error saving godown: ' + result.message);
             }

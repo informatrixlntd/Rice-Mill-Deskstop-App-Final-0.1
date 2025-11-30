@@ -263,7 +263,7 @@
 
         <div class="info-row">
             <span><strong>Bill No:</strong> {{ slip.bill_no }}</span>
-            <span><strong>Date:</strong> {{ slip.date }}</span>
+            <span><strong>Date:</strong> {{ slip.date_formatted or slip.date }}</span>
             <span><strong>Vehicle No:</strong> {{ slip.vehicle_no or '-' }}</span>
         </div>
 
@@ -290,25 +290,27 @@
         <table>
             <tr>
                 <th>Bags</th>
-                <th>Net Weight (kg)</th>
-                {% if slip.shortage_kg and slip.shortage_kg > 0 %}
-                <th>Shortage (kg)</th>
-                {% endif %}
-                <th>Avg Bag Weight (kg)</th>
+                <th>Avg Bag Weight</th>
+                <th>Net Weight (KG)</th>
+                <th>Gunny Weight (KG)</th>
+                <th>Final Weight (KG)</th>
+                <th>Weight (Quintal)</th>
+                <th>Weight (Khandi)</th>
                 <th>Rate Basis</th>
-                <th>Rate (₹)</th>
+                <th>Rate Value</th>
                 <th>Amount (₹)</th>
             </tr>
             <tr>
-                <td class="text-center">{{ slip.bags }}</td>
-                <td class="text-right">{{ "%.2f"|format(slip.final_weight_kg) }}</td>
-                {% if slip.shortage_kg and slip.shortage_kg > 0 %}
-                <td class="text-right">{{ "%.2f"|format(slip.shortage_kg) }}</td>
-                {% endif %}
-                <td class="text-right">{{ "%.2f"|format(slip.avg_bag_weight) }}</td>
-                <td class="text-center">{{ slip.rate_basis or '100 kg' }}</td>
-                <td class="text-right">{{ "%.2f"|format(slip.rate_value) }}</td>
-                <td class="text-right">{{ "%.2f"|format(slip.total_purchase_amount) }}</td>
+                <td class="text-center">{{ "%.0f"|format(slip.bags or 0) }}</td>
+                <td class="text-right">{{ "%.2f"|format(slip.avg_bag_weight or 0) }}</td>
+                <td class="text-right">{{ "%.2f"|format(slip.net_weight_kg or 0) }}</td>
+                <td class="text-right">{{ "%.2f"|format(slip.gunny_weight_kg or 0) }}</td>
+                <td class="text-right">{{ "%.2f"|format(slip.final_weight_kg or 0) }}</td>
+                <td class="text-right">{{ "%.3f"|format(slip.weight_quintal or 0) }}</td>
+                <td class="text-right">{{ "%.3f"|format(slip.weight_khandi or 0) }}</td>
+                <td class="text-center">{{ slip.rate_basis or 'Quintal' }}</td>
+                <td class="text-right">{{ "%.2f"|format(slip.rate_value or 0) }}</td>
+                <td class="text-right">{{ "%.2f"|format(slip.total_purchase_amount or 0) }}</td>
             </tr>
         </table>
 

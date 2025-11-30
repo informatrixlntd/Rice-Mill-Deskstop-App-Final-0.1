@@ -100,7 +100,7 @@ def init_db():
                 company_address TEXT,
                 document_type VARCHAR(255) DEFAULT 'Purchase Slip',
                 vehicle_no VARCHAR(255),
-                date VARCHAR(50) NOT NULL,
+                date DATETIME NOT NULL,
                 bill_no INT NOT NULL,
                 party_name TEXT,
                 material_name TEXT,
@@ -144,32 +144,32 @@ def init_db():
                 total_deduction DOUBLE DEFAULT 0,
                 payable_amount DOUBLE DEFAULT 0,
                 payment_method VARCHAR(255),
-                payment_date VARCHAR(50),
+                payment_date DATETIME,
                 payment_amount DOUBLE DEFAULT 0,
                 payment_bank_account TEXT,
-                payment_due_date VARCHAR(50),
+                payment_due_date DATETIME,
                 payment_due_comment TEXT,
-                instalment_1_date VARCHAR(50),
+                instalment_1_date DATETIME,
                 instalment_1_amount DOUBLE DEFAULT 0,
                 instalment_1_comment TEXT,
                 instalment_1_payment_method VARCHAR(255),
                 instalment_1_payment_bank_account TEXT,
-                instalment_2_date VARCHAR(50),
+                instalment_2_date DATETIME,
                 instalment_2_amount DOUBLE DEFAULT 0,
                 instalment_2_comment TEXT,
                 instalment_2_payment_method VARCHAR(255),
                 instalment_2_payment_bank_account TEXT,
-                instalment_3_date VARCHAR(50),
+                instalment_3_date DATETIME,
                 instalment_3_amount DOUBLE DEFAULT 0,
                 instalment_3_comment TEXT,
                 instalment_3_payment_method VARCHAR(255),
                 instalment_3_payment_bank_account TEXT,
-                instalment_4_date VARCHAR(50),
+                instalment_4_date DATETIME,
                 instalment_4_amount DOUBLE DEFAULT 0,
                 instalment_4_comment TEXT,
                 instalment_4_payment_method VARCHAR(255),
                 instalment_4_payment_bank_account TEXT,
-                instalment_5_date VARCHAR(50),
+                instalment_5_date DATETIME,
                 instalment_5_amount DOUBLE DEFAULT 0,
                 instalment_5_comment TEXT,
                 instalment_5_payment_method VARCHAR(255),
@@ -177,7 +177,9 @@ def init_db():
                 prepared_by VARCHAR(255),
                 authorised_sign VARCHAR(255),
                 paddy_unloading_godown TEXT,
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                INDEX idx_date (date),
+                INDEX idx_party_name (party_name(255)),
+                INDEX idx_bill_no (bill_no)
             )
         ''')
 
@@ -210,33 +212,27 @@ def init_db():
 
         columns_to_add = {
             'shortage_kg': "DOUBLE DEFAULT 0",
-            'rate_basis': "VARCHAR(10) DEFAULT '100'",
+            'rate_basis': "VARCHAR(50) DEFAULT 'Quintal'",
             'calculated_rate': "DOUBLE DEFAULT 0",
             'postage': "DOUBLE DEFAULT 0",
-            'payment_due_date': "VARCHAR(50)",
             'payment_due_comment': "TEXT",
             'payment_bank_account': "TEXT",
-            'instalment_1_date': "VARCHAR(50)",
             'instalment_1_amount': "DOUBLE DEFAULT 0",
             'instalment_1_comment': "TEXT",
             'instalment_1_payment_method': "VARCHAR(255)",
             'instalment_1_payment_bank_account': "TEXT",
-            'instalment_2_date': "VARCHAR(50)",
             'instalment_2_amount': "DOUBLE DEFAULT 0",
             'instalment_2_comment': "TEXT",
             'instalment_2_payment_method': "VARCHAR(255)",
             'instalment_2_payment_bank_account': "TEXT",
-            'instalment_3_date': "VARCHAR(50)",
             'instalment_3_amount': "DOUBLE DEFAULT 0",
             'instalment_3_comment': "TEXT",
             'instalment_3_payment_method': "VARCHAR(255)",
             'instalment_3_payment_bank_account': "TEXT",
-            'instalment_4_date': "VARCHAR(50)",
             'instalment_4_amount': "DOUBLE DEFAULT 0",
             'instalment_4_comment': "TEXT",
             'instalment_4_payment_method': "VARCHAR(255)",
             'instalment_4_payment_bank_account': "TEXT",
-            'instalment_5_date': "VARCHAR(50)",
             'instalment_5_amount': "DOUBLE DEFAULT 0",
             'instalment_5_comment': "TEXT",
             'instalment_5_payment_method': "VARCHAR(255)",
@@ -254,6 +250,21 @@ def init_db():
             'rate_value': "DOUBLE DEFAULT 0",
             'total_purchase_amount': "DOUBLE DEFAULT 0"
         }
+
+        # Convert date columns to DATETIME
+        date_columns_to_convert = [
+            'date', 'payment_date', 'payment_due_date',
+            'instalment_1_date', 'instalment_2_date', 'instalment_3_date',
+            'instalment_4_date', 'instalment_5_date'
+        ]
+
+        for col_name in date_columns_to_convert:
+            if col_name in existing_columns:
+                try:
+                    cursor.execute(f"ALTER TABLE purchase_slips MODIFY COLUMN {col_name} DATETIME")
+                    print(f"✓ Converted column {col_name} to DATETIME")
+                except mysql.connector.Error as err:
+                    print(f"Warning: Could not convert column {col_name}: {err}")
 
         for col_name, col_type in columns_to_add.items():
             if col_name not in existing_columns:
