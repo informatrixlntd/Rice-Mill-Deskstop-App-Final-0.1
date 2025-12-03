@@ -103,16 +103,10 @@ document.addEventListener('DOMContentLoaded', function() {
 
         const batavVal = batavPercentVal > 0 ? (totalAmount * (batavPercentVal / 100)) : 0;
 
-        // NEW: Dalali & Hammali based on selected Rate Basis
-        let dalaliVal = 0;
-        let hammaliVal = 0;
-        if (rateBasisVal === 'Quintal') {
-            dalaliVal = dalaliRateVal > 0 ? (quintal * dalaliRateVal) : 0;
-            hammaliVal = hammaliRateVal > 0 ? (quintal * hammaliRateVal) : 0;
-        } else if (rateBasisVal === 'Khandi') {
-            dalaliVal = dalaliRateVal > 0 ? (khandi * dalaliRateVal) : 0;
-            hammaliVal = hammaliRateVal > 0 ? (khandi * hammaliRateVal) : 0;
-        }
+        // NEW CALCULATION: Dalali & Hamali based on Net Weight KG / 100 (not rate basis)
+        const netKg = parseFloat(netWeightKg.value) || 0;
+        const dalaliVal = dalaliRateVal > 0 ? ((netKg / 100) * dalaliRateVal) : 0;
+        const hammaliVal = hammaliRateVal > 0 ? ((netKg / 100) * hammaliRateVal) : 0;
 
         const categoryADeductions = bankCommissionVal + postageVal + freightVal + rateDiffVal + qualityDiffVal + moistureDedVal + tdsVal;
         const totalDeductionVal = categoryADeductions + batavVal + dalaliVal + hammaliVal;

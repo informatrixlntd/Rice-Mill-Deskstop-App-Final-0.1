@@ -268,23 +268,34 @@
         </div>
 
         <div class="section-title">Party Details</div>
-        <div class="info-row">
-            <span><strong>Party Name:</strong> {{ slip.party_name or '-' }}</span>
-            <span><strong>Ticket No:</strong> {{ slip.ticket_no or '-' }}</span>
-        </div>
-        <div class="info-row">
-            <span><strong>Material:</strong> {{ slip.material_name or '-' }}</span>
-            <span><strong>Broker:</strong> {{ slip.broker or '-' }}</span>
-        </div>
-        <div class="info-row">
-            <span><strong>Terms of Delivery:</strong> {{ slip.terms_of_delivery or '-' }}</span>
-            <span><strong>Sup. Inv. No:</strong> {{ slip.sup_inv_no or '-' }}</span>
-        </div>
-        {% if slip.gst_no %}
-        <div class="info-row">
-            <span><strong>GST No:</strong> {{ slip.gst_no }}</span>
-        </div>
-        {% endif %}
+        <table>
+            <tr>
+                <th style="width: 25%;">Party Name</th>
+                <td style="width: 25%;">{{ slip.party_name or '-' }}</td>
+                <th style="width: 25%;">Ticket No</th>
+                <td style="width: 25%;">{{ slip.ticket_no or '-' }}</td>
+            </tr>
+            <tr>
+                <th>Material</th>
+                <td>{{ slip.material_name or '-' }}</td>
+                <th>Broker</th>
+                <td>{{ slip.broker or '-' }}</td>
+            </tr>
+            <tr>
+                <th>Terms of Delivery</th>
+                <td>{{ slip.terms_of_delivery or '-' }}</td>
+                <th>Sup. Inv. No</th>
+                <td>{{ slip.sup_inv_no or '-' }}</td>
+            </tr>
+            <tr>
+                <th>GST No</th>
+                <td colspan="3">{{ slip.gst_no or '-' }}</td>
+            </tr>
+            <tr>
+                <th>Mobile Number</th>
+                <td colspan="3">{{ slip.mobile_number or '-' }}</td>
+            </tr>
+        </table>
 
         <div class="section-title">Weight & Rate Details</div>
         <table>
@@ -401,7 +412,7 @@
                 <tr>
                     <!-- <td>Formula</td> -->
                     <td>Dalali</td>
-                    <td>₹{{ "%.2f"|format(slip.dalali_rate) }}/kg</td>
+                    <td>₹{{ "%.2f"|format(slip.dalali_rate) }}/100 KG</td>
                     <td class="text-right">{{ "%.2f"|format(slip.dalali) }}</td>
                 </tr>
                 {% endif %}
@@ -409,8 +420,8 @@
                 {% if slip.hammali and slip.hammali > 0 %}
                 <tr>
                     <!-- <td>Formula</td> -->
-                    <td>Hammali</td>
-                    <td>₹{{ "%.2f"|format(slip.hammali_rate) }}/kg</td>
+                    <td>Hamali</td>
+                    <td>₹{{ "%.2f"|format(slip.hammali_rate) }}/100 KG</td>
                     <td class="text-right">{{ "%.2f"|format(slip.hammali) }}</td>
                 </tr>
                 {% endif %}

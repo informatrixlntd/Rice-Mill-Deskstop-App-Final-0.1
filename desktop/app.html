@@ -425,8 +425,6 @@
                 <div class="modal-footer">
                     <button type="button" class="btn btn-primary" onclick="showEditSlipModal()">Edit Slip</button>
                     <button type="button" class="btn btn-success" onclick="printCurrentSlip()">Print</button>
-                    <button type="button" class="btn btn-info" onclick="downloadCurrentSlipPDF()">Download PDF</button>
-                    <button type="button" class="btn btn-warning" onclick="shareSlipWhatsApp()">Share on WhatsApp</button>
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
                 </div>
             </div>
@@ -559,11 +557,11 @@
                                 <input type="number" step="0.01" class="form-control" id="edit_shortage_percent" name="shortage_percent">
                             </div>
                             <div class="col-md-4">
-                                <label class="form-label">Dalali Rate</label>
+                                <label class="form-label">Dalali Rate (Rs per 100 KG)</label>
                                 <input type="number" step="0.01" class="form-control" id="edit_dalali_rate" name="dalali_rate">
                             </div>
                             <div class="col-md-4">
-                                <label class="form-label">Hammali Rate</label>
+                                <label class="form-label">Hamali Rate (Rs per 100 KG)</label>
                                 <input type="number" step="0.01" class="form-control" id="edit_hammali_rate" name="hammali_rate">
                             </div>
                         </div>
@@ -1044,11 +1042,20 @@
                                     <tr><td>Bill No</td><td>${slip.bill_no}</td></tr>
                                     <tr><td>Date</td><td>${slip.date || '-'}</td></tr>
                                     <tr><td>Vehicle No</td><td>${slip.vehicle_no || '-'}</td></tr>
+                                </table>
+                            </div>
+
+                            <div class="view-section">
+                                <h5>Party Details</h5>
+                                <table class="view-table">
                                     <tr><td>Party Name</td><td>${slip.party_name || '-'}</td></tr>
-                                    <tr><td>Material</td><td>${slip.material_name || '-'}</td></tr>
                                     <tr><td>Ticket No</td><td>${slip.ticket_no || '-'}</td></tr>
+                                    <tr><td>Material</td><td>${slip.material_name || '-'}</td></tr>
                                     <tr><td>Broker</td><td>${slip.broker || '-'}</td></tr>
+                                    <tr><td>Terms of Delivery</td><td>${slip.terms_of_delivery || '-'}</td></tr>
+                                    <tr><td>Sup. Inv. No</td><td>${slip.sup_inv_no || '-'}</td></tr>
                                     <tr><td>GST No</td><td>${slip.gst_no || '-'}</td></tr>
+                                    <tr><td>Mobile Number</td><td>${slip.mobile_number || '-'}</td></tr>
                                 </table>
                             </div>
 
@@ -1074,8 +1081,10 @@
                                     <tr><td>Bank Commission</td><td>₹${slip.bank_commission || 0}</td></tr>
                                     <tr><td>Postage</td><td>₹${slip.postage || 0}</td></tr>
                                     <tr><td>Batav (${slip.batav_percent || 0}%)</td><td>₹${slip.batav || 0}</td></tr>
-                                    <tr><td>Dalali (${slip.dalali_rate || 0}/kg)</td><td>₹${slip.dalali || 0}</td></tr>
-                                    <tr><td>Hammali (${slip.hammali_rate || 0}/kg)</td><td>₹${slip.hammali || 0}</td></tr>
+                                    <tr><td>Dalali Rate (Rs per 100 KG)</td><td>₹${slip.dalali_rate || 0}</td></tr>
+                                    <tr><td>Dalali Amount</td><td>₹${slip.dalali || 0}</td></tr>
+                                    <tr><td>Hamali Rate (Rs per 100 KG)</td><td>₹${slip.hammali_rate || 0}</td></tr>
+                                    <tr><td>Hamali Amount</td><td>₹${slip.hammali || 0}</td></tr>
                                     <tr><td>Freight</td><td>₹${slip.freight || 0}</td></tr>
                                     <tr><td>Rate Diff</td><td>₹${slip.rate_diff || 0}</td></tr>
                                     <tr><td>Quality Diff</td><td>₹${slip.quality_diff || 0}</td></tr>
@@ -1235,77 +1244,9 @@
         }
 
         function printSlipDirect(slipId) {
-            // Send print request to Electron main process
-            ipcRenderer.send('print-slip', slipId);
-        }
-
-        async function downloadCurrentSlipPDF() {
-            if (!currentViewSlipId || !currentSlipData) return;
-
-            try {
-                const response = await fetch(`http://localhost:5000/api/slip/${currentViewSlipId}/pdf`);
-                if (!response.ok) throw new Error('Failed to generate PDF');
-
-                const blob = await response.blob();
-                const url = window.URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = `purchase_slip_${currentViewSlipId}_${new Date().getTime()}.pdf`;
-                document.body.appendChild(a);
-                a.click();
-                window.URL.revokeObjectURL(url);
-                document.body.removeChild(a);
-
-                alert('PDF downloaded successfully!');
-            } catch (error) {
-                console.error('Error downloading PDF:', error);
-                alert('Error downloading PDF: ' + error.message);
-            }
-        }
-
-        async function shareSlipWhatsApp() {
-            if (!currentViewSlipId || !currentSlipData) return;
-
-            const mobileNumber = currentSlipData.mobile_number;
-            if (!mobileNumber) {
-                alert('No mobile number found for this slip. Please add a mobile number in the slip details.');
-                return;
-            }
-
-            // Generate PDF first
-            try {
-                const response = await fetch(`http://localhost:5000/api/slip/${currentViewSlipId}/pdf`);
-                if (!response.ok) throw new Error('Failed to generate PDF');
-
-                const blob = await response.blob();
-                const file = new File([blob], `purchase_slip_${currentViewSlipId}.pdf`, { type: 'application/pdf' });
-
-                // Save PDF to temp location and get path
-                const formData = new FormData();
-                formData.append('pdf', file);
-                formData.append('mobile', mobileNumber);
-
-                const saveResponse = await fetch('http://localhost:5000/api/save-temp-pdf', {
-                    method: 'POST',
-                    body: formData
-                });
-
-                if (!saveResponse.ok) throw new Error('Failed to prepare PDF for sharing');
-
-                const result = await saveResponse.json();
-                const cleanMobile = mobileNumber.replace(/[^0-9]/g, '');
-                const whatsappNumber = cleanMobile.startsWith('91') ? cleanMobile : '91' + cleanMobile;
-
-                // Construct WhatsApp message with PDF
-                const message = `Purchase Slip - Bill No: ${currentSlipData.bill_no || currentViewSlipId}`;
-                const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(message)}`;
-
-                window.open(whatsappUrl, '_blank');
-                alert('WhatsApp opened! Please manually attach the downloaded PDF to your message.');
-            } catch (error) {
-                console.error('Error sharing on WhatsApp:', error);
-                alert('Error sharing on WhatsApp: ' + error.message);
-            }
+            // Send print request to Electron main process with slip data
+            const slip = currentSlipData || { id: slipId };
+            ipcRenderer.send('print-slip', { slipId, mobileNumber: slip.mobile_number, billNo: slip.bill_no });
         }
 
         async function deleteSlip(slipId) {

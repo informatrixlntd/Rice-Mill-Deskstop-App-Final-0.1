@@ -199,11 +199,16 @@ ipcMain.on('logout', () => {
 /**
  * Print slip handler with PDF preview
  * Generates PDF using printToPDF and displays in custom viewer
- * User can print or download from the viewer
+ * User can print, download, or share on WhatsApp from the viewer
  */
-ipcMain.on('print-slip', async (event, slipId) => {
-    const { dialog } = require('electron');
+ipcMain.on('print-slip', async (event, data) => {
+    const { dialog, shell } = require('electron');
     let printWindow = null;
+
+    // Handle both old format (just slipId) and new format (object with slipId)
+    const slipId = typeof data === 'object' ? data.slipId : data;
+    const mobileNumber = typeof data === 'object' ? data.mobileNumber : null;
+    const billNo = typeof data === 'object' ? data.billNo : null;
 
     try {
         // Create hidden window to load slip content
@@ -244,13 +249,13 @@ ipcMain.on('print-slip', async (event, slipId) => {
             width: 900,
             height: 1200,
             webPreferences: {
-                nodeIntegration: false,
-                contextIsolation: true
+                nodeIntegration: true,
+                contextIsolation: false
             },
             title: `Purchase Slip ${slipId}`
         });
 
-        // Create HTML with embedded PDF viewer
+        // Create HTML with embedded PDF viewer and WhatsApp button
         const viewerHTML = `
 <!DOCTYPE html>
 <html>
@@ -305,6 +310,12 @@ ipcMain.on('print-slip', async (event, slipId) => {
         button.download:hover {
             background: #45a049;
         }
+        button.whatsapp {
+            background: #25d366;
+        }
+        button.whatsapp:hover {
+            background: #20ba5a;
+        }
         #pdf-container {
             width: 100%;
             height: calc(100vh - 50px);
@@ -324,19 +335,67 @@ ipcMain.on('print-slip', async (event, slipId) => {
             <span>⬇️</span>
             <span>Download PDF</span>
         </button>
+        <button class="whatsapp" onclick="shareWhatsApp()">
+            <span>📱</span>
+            <span>Share on WhatsApp</span>
+        </button>
     </div>
     <iframe id="pdf-container" src="data:application/pdf;base64,${pdfBase64}"></iframe>
 
     <script>
+        const { shell } = require('electron');
+        const fs = require('fs');
+        const path = require('path');
+        const os = require('os');
+
+        const pdfBase64 = '${pdfBase64}';
+        const slipId = ${slipId};
+        const mobileNumber = ${mobileNumber ? `'${mobileNumber}'` : 'null'};
+        const billNo = ${billNo ? `'${billNo}'` : 'null'};
+
         function printPDF() {
             window.print();
         }
 
         function downloadPDF() {
             const link = document.createElement('a');
-            link.href = 'data:application/pdf;base64,${pdfBase64}';
-            link.download = 'purchase_slip_${slipId}.pdf';
+            link.href = 'data:application/pdf;base64,' + pdfBase64;
+            link.download = 'purchase_slip_' + slipId + '.pdf';
             link.click();
+        }
+
+        function shareWhatsApp() {
+            if (!mobileNumber) {
+                alert('No mobile number found for this slip. Please add a mobile number in the slip details.');
+                return;
+            }
+
+            // Save PDF to temp directory
+            const tempDir = os.tmpdir();
+            const fileName = 'purchase_slip_' + slipId + '.pdf';
+            const filePath = path.join(tempDir, fileName);
+
+            // Convert base64 to buffer and save
+            const pdfBuffer = Buffer.from(pdfBase64, 'base64');
+            fs.writeFileSync(filePath, pdfBuffer);
+
+            // Clean mobile number and construct WhatsApp URL
+            const cleanMobile = mobileNumber.replace(/[^0-9]/g, '');
+            const whatsappNumber = cleanMobile.startsWith('91') ? cleanMobile : '91' + cleanMobile;
+
+            const message = 'Purchase Slip - Bill No: ' + (billNo || slipId);
+            const whatsappUrl = 'https://wa.me/' + whatsappNumber + '?text=' + encodeURIComponent(message);
+
+            // Open WhatsApp Web
+            shell.openExternal(whatsappUrl);
+
+            // Show instruction to user
+            setTimeout(() => {
+                alert('WhatsApp Web opened!\\n\\nThe PDF has been saved to:\\n' + filePath + '\\n\\nPlease manually attach this file to your WhatsApp message.');
+
+                // Open file location
+                shell.showItemInFolder(filePath);
+            }, 500);
         }
 
         // Add keyboard shortcuts

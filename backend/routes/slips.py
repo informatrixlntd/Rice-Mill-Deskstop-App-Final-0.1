@@ -145,8 +145,9 @@ def calculate_fields(data):
     batav = round(total_purchase_amount * (batav_percent / 100), 2) if batav_percent > 0 else 0
     shortage = round(total_purchase_amount * (shortage_percent / 100), 2) if shortage_percent > 0 else 0
 
-    dalali = round(weight_quintal * dalali_rate, 2) if dalali_rate > 0 else 0
-    hammali = round(weight_quintal * hammali_rate, 2) if hammali_rate > 0 else 0
+    # NEW CALCULATION: Dalali & Hamali based on Net Weight KG / 100
+    dalali = round((net_weight_kg / 100) * dalali_rate, 2) if dalali_rate > 0 else 0
+    hammali = round((net_weight_kg / 100) * hammali_rate, 2) if hammali_rate > 0 else 0
 
     total_deduction = round(bank_commission + postage + batav + shortage + dalali + hammali + freight + rate_diff + quality_diff + moisture_ded + tds, 2)
     payable_amount = round(total_purchase_amount - total_deduction, 2)
