@@ -1,9 +1,16 @@
-const { app, BrowserWindow, ipcMain } = require('electron');
+const { app, BrowserWindow, ipcMain, dialog } = require('electron');
 const path = require('path');
-const { spawn } = require('child_process');
+const { spawn, exec } = require('child_process');
+const fs = require('fs');
+const dotenv = require('dotenv');
 
 let mainWindow;
 let pythonProcess;
+let isBackupInProgress = false;
+let canCloseApp = false;
+
+// Load environment variables
+dotenv.config({ path: path.join(__dirname, '..', '.env') });
 
 function createWindow() {
     mainWindow = new BrowserWindow({
@@ -21,8 +28,124 @@ function createWindow() {
 
     mainWindow.loadFile(path.join(__dirname, 'login.html'));
 
+    mainWindow.on('close', async (event) => {
+        if (!canCloseApp && !isBackupInProgress) {
+            event.preventDefault();
+            await showBackupDialog();
+        }
+    });
+
     mainWindow.on('closed', function() {
         mainWindow = null;
+    });
+}
+
+async function showBackupDialog() {
+    if (isBackupInProgress) return;
+
+    const result = await dialog.showMessageBox(mainWindow, {
+        type: 'warning',
+        title: 'Backup Required Before Exit',
+        message: 'Database backup is required before closing the application.',
+        detail: 'Click "Start Backup" to create a backup and upload it to Google Drive.',
+        buttons: ['Start Backup', 'Cancel'],
+        defaultId: 0,
+        cancelId: 1
+    });
+
+    if (result.response === 0) {
+        await performBackup();
+    }
+}
+
+async function performBackup() {
+    isBackupInProgress = true;
+
+    try {
+        const progressDialog = dialog.showMessageBox(mainWindow, {
+            type: 'info',
+            title: 'Backup in Progress',
+            message: 'Creating database backup...',
+            detail: 'Please wait. This may take a few moments.',
+            buttons: []
+        });
+
+        const dbConfig = {
+            host: process.env.DB_HOST || 'localhost',
+            user: process.env.DB_USER || 'root',
+            password: process.env.DB_PASSWORD || '',
+            database: process.env.DB_NAME || 'purchase_slips'
+        };
+
+        // Try to use backup module if available
+        let backupSuccess = false;
+        try {
+            const backup = require('./backup');
+            backupSuccess = await backup.performBackupAndUpload(dbConfig, mainWindow);
+        } catch (error) {
+            console.error('Backup module error:', error);
+            // Fallback: just create local backup without Google Drive
+            backupSuccess = await createLocalBackupOnly(dbConfig);
+        }
+
+        isBackupInProgress = false;
+
+        if (backupSuccess) {
+            await dialog.showMessageBox(mainWindow, {
+                type: 'info',
+                title: 'Backup Completed',
+                message: 'Database backup completed successfully!',
+                detail: 'The application will now close.',
+                buttons: ['OK']
+            });
+
+            canCloseApp = true;
+            mainWindow.close();
+        } else {
+            await dialog.showMessageBox(mainWindow, {
+                type: 'error',
+                title: 'Backup Failed',
+                message: 'Database backup failed.',
+                detail: 'Please try again or contact support.',
+                buttons: ['OK']
+            });
+        }
+    } catch (error) {
+        isBackupInProgress = false;
+        console.error('Backup error:', error);
+        await dialog.showMessageBox(mainWindow, {
+            type: 'error',
+            title: 'Backup Error',
+            message: 'An error occurred during backup.',
+            detail: error.message,
+            buttons: ['OK']
+        });
+    }
+}
+
+function createLocalBackupOnly(dbConfig) {
+    return new Promise((resolve) => {
+        const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+        const backupDir = path.join(process.env.USERPROFILE || process.env.HOME, 'PurchaseSlipBackups');
+
+        if (!fs.existsSync(backupDir)) {
+            fs.mkdirSync(backupDir, { recursive: true });
+        }
+
+        const backupFileName = `purchase_slips_backup_${timestamp}.sql`;
+        const backupFilePath = path.join(backupDir, backupFileName);
+
+        const command = `mysqldump -h ${dbConfig.host} -u ${dbConfig.user} -p${dbConfig.password} ${dbConfig.database} > "${backupFilePath}"`;
+
+        exec(command, (error, stdout, stderr) => {
+            if (error) {
+                console.error('Local backup error:', error);
+                resolve(false);
+                return;
+            }
+            console.log('Local backup created:', backupFilePath);
+            resolve(true);
+        });
     });
 }
 

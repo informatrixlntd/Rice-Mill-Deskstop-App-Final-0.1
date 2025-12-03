@@ -1,12 +1,20 @@
-from flask import Blueprint, request, jsonify, render_template
+from flask import Blueprint, request, jsonify, render_template, send_file
 import sys
 import os
+import tempfile
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from database import get_db_connection, get_next_bill_no
 from datetime import datetime
 from pytz import timezone
+
+try:
+    import pdfkit
+    PDFKIT_AVAILABLE = True
+except ImportError:
+    PDFKIT_AVAILABLE = False
+    print("Warning: pdfkit not available. PDF generation will be disabled.")
 
 slips_bp = Blueprint('slips', __name__)
 
@@ -582,6 +590,85 @@ def delete_slip(slip_id):
 
     except Exception as e:
         print(f"Error deleting slip: {e}")
+        return jsonify({
+            'success': False,
+            'message': str(e)
+        }), 400
+    finally:
+        if cursor:
+            cursor.close()
+        if conn:
+            conn.close()
+
+@slips_bp.route('/api/slip/<int:slip_id>/pdf', methods=['GET'])
+def generate_slip_pdf(slip_id):
+    """Generate PDF for a purchase slip"""
+    if not PDFKIT_AVAILABLE:
+        return jsonify({
+            'success': False,
+            'message': 'PDF generation is not available. Please install wkhtmltopdf.'
+        }), 500
+
+    conn = None
+    cursor = None
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor(dictionary=True)
+
+        cursor.execute('SELECT * FROM purchase_slips WHERE id = %s', (slip_id,))
+        slip = cursor.fetchone()
+
+        if not slip:
+            return jsonify({'success': False, 'message': 'Slip not found'}), 404
+
+        # Format datetime fields
+        datetime_fields = ['date', 'instalment_1_date', 'instalment_2_date',
+                          'instalment_3_date', 'instalment_4_date', 'instalment_5_date']
+        for field in datetime_fields:
+            if slip.get(field):
+                slip[f'{field}_formatted'] = format_ist_datetime(slip[field])
+
+        # Render HTML
+        html_content = render_template('print_template.html', slip=slip)
+
+        # Generate PDF
+        pdf_options = {
+            'page-size': 'A4',
+            'margin-top': '10mm',
+            'margin-right': '10mm',
+            'margin-bottom': '10mm',
+            'margin-left': '10mm',
+            'encoding': 'UTF-8',
+            'no-outline': None,
+            'enable-local-file-access': None
+        }
+
+        # Create temporary file
+        with tempfile.NamedTemporaryFile(delete=False, suffix='.pdf') as temp_pdf:
+            pdfkit.from_string(html_content, temp_pdf.name, options=pdf_options)
+            temp_pdf_path = temp_pdf.name
+
+        # Send file and schedule cleanup
+        response = send_file(
+            temp_pdf_path,
+            mimetype='application/pdf',
+            as_attachment=True,
+            download_name=f'purchase_slip_{slip_id}.pdf'
+        )
+
+        # Schedule temp file cleanup after response
+        @response.call_on_close
+        def cleanup():
+            try:
+                if os.path.exists(temp_pdf_path):
+                    os.unlink(temp_pdf_path)
+            except:
+                pass
+
+        return response
+
+    except Exception as e:
+        print(f"Error generating PDF: {e}")
         return jsonify({
             'success': False,
             'message': str(e)

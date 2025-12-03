@@ -424,7 +424,9 @@
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-primary" onclick="showEditSlipModal()">Edit Slip</button>
-                    <button type="button" class="btn btn-success" onclick="printCurrentSlip()">Print Slip</button>
+                    <button type="button" class="btn btn-success" onclick="printCurrentSlip()">Print</button>
+                    <button type="button" class="btn btn-info" onclick="downloadCurrentSlipPDF()">Download PDF</button>
+                    <button type="button" class="btn btn-warning" onclick="shareSlipWhatsApp()">Share on WhatsApp</button>
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
                 </div>
             </div>
@@ -471,74 +473,161 @@
                             </div>
                         </div>
                         <div class="row mb-3">
-                            <div class="col-md-6">
+                            <div class="col-md-4">
+                                <label class="form-label">Mobile Number</label>
+                                <input type="text" class="form-control" id="edit_mobile_number" name="mobile_number">
+                            </div>
+                            <div class="col-md-4">
                                 <label class="form-label">Material Name</label>
                                 <input type="text" class="form-control" id="edit_material_name" name="material_name">
                             </div>
-                            <div class="col-md-6">
+                            <div class="col-md-4">
                                 <label class="form-label">Ticket No</label>
                                 <input type="text" class="form-control" id="edit_ticket_no" name="ticket_no">
                             </div>
                         </div>
-
-                        <!-- Payment Info -->
-                        <h6 class="text-primary mb-3">Payment Information</h6>
                         <div class="row mb-3">
                             <div class="col-md-4">
-                                <label class="form-label">Payment Method</label>
-                                <select class="form-select" id="edit_payment_method" name="payment_method">
-                                    <option value="">Select</option>
-                                    <option value="Cash">Cash</option>
-                                    <option value="Online Transfer">Online Transfer</option>
-                                    <option value="Cheque">Cheque</option>
+                                <label class="form-label">Broker</label>
+                                <input type="text" class="form-control" id="edit_broker" name="broker">
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">Terms of Delivery</label>
+                                <input type="text" class="form-control" id="edit_terms_of_delivery" name="terms_of_delivery">
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">Sup. Inv. No</label>
+                                <input type="text" class="form-control" id="edit_sup_inv_no" name="sup_inv_no">
+                            </div>
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label">GST No</label>
+                                <input type="text" class="form-control" id="edit_gst_no" name="gst_no">
+                            </div>
+                        </div>
+
+                        <!-- Quantity Details -->
+                        <h6 class="text-primary mb-3">Quantity Details</h6>
+                        <div class="row mb-3">
+                            <div class="col-md-3">
+                                <label class="form-label">Bags</label>
+                                <input type="number" step="1" class="form-control" id="edit_bags" name="bags">
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label">Net Weight (KG)</label>
+                                <input type="number" step="0.01" class="form-control" id="edit_net_weight_kg" name="net_weight_kg">
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label">Gunny Weight (KG)</label>
+                                <input type="number" step="0.01" class="form-control" id="edit_gunny_weight_kg" name="gunny_weight_kg">
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label">Rate Basis</label>
+                                <select class="form-select" id="edit_rate_basis" name="rate_basis">
+                                    <option value="Quintal">Quintal</option>
+                                    <option value="Khandi">Khandi</option>
                                 </select>
                             </div>
-                            <div class="col-md-4">
-                                <label class="form-label">Payment Date</label>
-                                <input type="datetime-local" class="form-control" id="edit_payment_date" name="payment_date">
-                            </div>
-                            <div class="col-md-4">
-                                <label class="form-label">Payment Amount</label>
-                                <input type="number" step="0.01" class="form-control" id="edit_payment_amount" name="payment_amount">
-                            </div>
                         </div>
                         <div class="row mb-3">
-                            <div class="col-md-12">
-                                <label class="form-label">Payment Bank Account</label>
-                                <textarea class="form-control" id="edit_payment_bank_account" name="payment_bank_account" rows="2"></textarea>
+                            <div class="col-md-4">
+                                <label class="form-label">Rate Value</label>
+                                <input type="number" step="0.01" class="form-control" id="edit_rate_value" name="rate_value">
                             </div>
                         </div>
 
-                        <!-- Payment Due -->
-                        <h6 class="text-primary mb-3">Payment Due Details</h6>
+                        <!-- Deductions -->
+                        <h6 class="text-primary mb-3">Deductions</h6>
+                        <div class="row mb-3">
+                            <div class="col-md-4">
+                                <label class="form-label">Bank Commission</label>
+                                <input type="number" step="0.01" class="form-control" id="edit_bank_commission" name="bank_commission">
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">Postage</label>
+                                <input type="number" step="0.01" class="form-control" id="edit_postage" name="postage">
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">Batav %</label>
+                                <input type="number" step="0.01" class="form-control" id="edit_batav_percent" name="batav_percent">
+                            </div>
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col-md-4">
+                                <label class="form-label">Shortage %</label>
+                                <input type="number" step="0.01" class="form-control" id="edit_shortage_percent" name="shortage_percent">
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">Dalali Rate</label>
+                                <input type="number" step="0.01" class="form-control" id="edit_dalali_rate" name="dalali_rate">
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">Hammali Rate</label>
+                                <input type="number" step="0.01" class="form-control" id="edit_hammali_rate" name="hammali_rate">
+                            </div>
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col-md-3">
+                                <label class="form-label">Freight</label>
+                                <input type="number" step="0.01" class="form-control" id="edit_freight" name="freight">
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label">Rate Diff</label>
+                                <input type="number" step="0.01" class="form-control" id="edit_rate_diff" name="rate_diff">
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label">Quality Diff</label>
+                                <input type="number" step="0.01" class="form-control" id="edit_quality_diff" name="quality_diff">
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label">Moisture Ded.</label>
+                                <input type="number" step="0.01" class="form-control" id="edit_moisture_ded" name="moisture_ded">
+                            </div>
+                        </div>
                         <div class="row mb-3">
                             <div class="col-md-6">
-                                <label class="form-label">Payment Due Date</label>
-                                <input type="datetime-local" class="form-control" id="edit_payment_due_date" name="payment_due_date">
+                                <label class="form-label">TDS</label>
+                                <input type="number" step="0.01" class="form-control" id="edit_tds" name="tds">
                             </div>
                             <div class="col-md-6">
-                                <label class="form-label">Payment Due Comment</label>
-                                <textarea class="form-control" id="edit_payment_due_comment" name="payment_due_comment" rows="2"></textarea>
+                                <label class="form-label">Moisture Ded. Comment</label>
+                                <input type="text" class="form-control" id="edit_moisture_ded_comment" name="moisture_ded_comment">
                             </div>
                         </div>
 
-                        <!-- All 5 Instalments with Structured Fields -->
+                        <!-- All 5 Instalments with All Fields -->
                         <h6 class="text-primary mb-3">Payment Instalments</h6>
 
                         <!-- Instalment 1 -->
                         <div class="card mb-3">
                             <div class="card-header bg-light">Instalment 1</div>
                             <div class="card-body">
-                                <div class="row">
-                                    <div class="col-md-4">
+                                <div class="row mb-2">
+                                    <div class="col-md-3">
                                         <label class="form-label">Date</label>
                                         <input type="datetime-local" class="form-control" id="edit_instalment_1_date" name="instalment_1_date">
                                     </div>
-                                    <div class="col-md-4">
+                                    <div class="col-md-3">
                                         <label class="form-label">Amount</label>
                                         <input type="number" step="0.01" class="form-control" id="edit_instalment_1_amount" name="instalment_1_amount">
                                     </div>
-                                    <div class="col-md-4">
+                                    <div class="col-md-3">
+                                        <label class="form-label">Payment Method</label>
+                                        <select class="form-select" id="edit_instalment_1_payment_method" name="instalment_1_payment_method">
+                                            <option value="">Select</option>
+                                            <option value="Cash">Cash</option>
+                                            <option value="Online Transfer">Online Transfer</option>
+                                            <option value="Cheque">Cheque</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label class="form-label">Payment Bank Account</label>
+                                        <input type="text" class="form-control" id="edit_instalment_1_payment_bank_account" name="instalment_1_payment_bank_account">
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-12">
                                         <label class="form-label">Comment</label>
                                         <input type="text" class="form-control" id="edit_instalment_1_comment" name="instalment_1_comment">
                                     </div>
@@ -550,16 +639,31 @@
                         <div class="card mb-3">
                             <div class="card-header bg-light">Instalment 2</div>
                             <div class="card-body">
-                                <div class="row">
-                                    <div class="col-md-4">
+                                <div class="row mb-2">
+                                    <div class="col-md-3">
                                         <label class="form-label">Date</label>
                                         <input type="datetime-local" class="form-control" id="edit_instalment_2_date" name="instalment_2_date">
                                     </div>
-                                    <div class="col-md-4">
+                                    <div class="col-md-3">
                                         <label class="form-label">Amount</label>
                                         <input type="number" step="0.01" class="form-control" id="edit_instalment_2_amount" name="instalment_2_amount">
                                     </div>
-                                    <div class="col-md-4">
+                                    <div class="col-md-3">
+                                        <label class="form-label">Payment Method</label>
+                                        <select class="form-select" id="edit_instalment_2_payment_method" name="instalment_2_payment_method">
+                                            <option value="">Select</option>
+                                            <option value="Cash">Cash</option>
+                                            <option value="Online Transfer">Online Transfer</option>
+                                            <option value="Cheque">Cheque</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label class="form-label">Payment Bank Account</label>
+                                        <input type="text" class="form-control" id="edit_instalment_2_payment_bank_account" name="instalment_2_payment_bank_account">
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-12">
                                         <label class="form-label">Comment</label>
                                         <input type="text" class="form-control" id="edit_instalment_2_comment" name="instalment_2_comment">
                                     </div>
@@ -571,16 +675,31 @@
                         <div class="card mb-3">
                             <div class="card-header bg-light">Instalment 3</div>
                             <div class="card-body">
-                                <div class="row">
-                                    <div class="col-md-4">
+                                <div class="row mb-2">
+                                    <div class="col-md-3">
                                         <label class="form-label">Date</label>
                                         <input type="datetime-local" class="form-control" id="edit_instalment_3_date" name="instalment_3_date">
                                     </div>
-                                    <div class="col-md-4">
+                                    <div class="col-md-3">
                                         <label class="form-label">Amount</label>
                                         <input type="number" step="0.01" class="form-control" id="edit_instalment_3_amount" name="instalment_3_amount">
                                     </div>
-                                    <div class="col-md-4">
+                                    <div class="col-md-3">
+                                        <label class="form-label">Payment Method</label>
+                                        <select class="form-select" id="edit_instalment_3_payment_method" name="instalment_3_payment_method">
+                                            <option value="">Select</option>
+                                            <option value="Cash">Cash</option>
+                                            <option value="Online Transfer">Online Transfer</option>
+                                            <option value="Cheque">Cheque</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label class="form-label">Payment Bank Account</label>
+                                        <input type="text" class="form-control" id="edit_instalment_3_payment_bank_account" name="instalment_3_payment_bank_account">
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-12">
                                         <label class="form-label">Comment</label>
                                         <input type="text" class="form-control" id="edit_instalment_3_comment" name="instalment_3_comment">
                                     </div>
@@ -592,16 +711,31 @@
                         <div class="card mb-3">
                             <div class="card-header bg-light">Instalment 4</div>
                             <div class="card-body">
-                                <div class="row">
-                                    <div class="col-md-4">
+                                <div class="row mb-2">
+                                    <div class="col-md-3">
                                         <label class="form-label">Date</label>
                                         <input type="datetime-local" class="form-control" id="edit_instalment_4_date" name="instalment_4_date">
                                     </div>
-                                    <div class="col-md-4">
+                                    <div class="col-md-3">
                                         <label class="form-label">Amount</label>
                                         <input type="number" step="0.01" class="form-control" id="edit_instalment_4_amount" name="instalment_4_amount">
                                     </div>
-                                    <div class="col-md-4">
+                                    <div class="col-md-3">
+                                        <label class="form-label">Payment Method</label>
+                                        <select class="form-select" id="edit_instalment_4_payment_method" name="instalment_4_payment_method">
+                                            <option value="">Select</option>
+                                            <option value="Cash">Cash</option>
+                                            <option value="Online Transfer">Online Transfer</option>
+                                            <option value="Cheque">Cheque</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label class="form-label">Payment Bank Account</label>
+                                        <input type="text" class="form-control" id="edit_instalment_4_payment_bank_account" name="instalment_4_payment_bank_account">
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-12">
                                         <label class="form-label">Comment</label>
                                         <input type="text" class="form-control" id="edit_instalment_4_comment" name="instalment_4_comment">
                                     </div>
@@ -613,16 +747,31 @@
                         <div class="card mb-3">
                             <div class="card-header bg-light">Instalment 5</div>
                             <div class="card-body">
-                                <div class="row">
-                                    <div class="col-md-4">
+                                <div class="row mb-2">
+                                    <div class="col-md-3">
                                         <label class="form-label">Date</label>
                                         <input type="datetime-local" class="form-control" id="edit_instalment_5_date" name="instalment_5_date">
                                     </div>
-                                    <div class="col-md-4">
+                                    <div class="col-md-3">
                                         <label class="form-label">Amount</label>
                                         <input type="number" step="0.01" class="form-control" id="edit_instalment_5_amount" name="instalment_5_amount">
                                     </div>
-                                    <div class="col-md-4">
+                                    <div class="col-md-3">
+                                        <label class="form-label">Payment Method</label>
+                                        <select class="form-select" id="edit_instalment_5_payment_method" name="instalment_5_payment_method">
+                                            <option value="">Select</option>
+                                            <option value="Cash">Cash</option>
+                                            <option value="Online Transfer">Online Transfer</option>
+                                            <option value="Cheque">Cheque</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label class="form-label">Payment Bank Account</label>
+                                        <input type="text" class="form-control" id="edit_instalment_5_payment_bank_account" name="instalment_5_payment_bank_account">
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-12">
                                         <label class="form-label">Comment</label>
                                         <input type="text" class="form-control" id="edit_instalment_5_comment" name="instalment_5_comment">
                                     </div>
@@ -970,35 +1119,74 @@
             }
         }
 
+        function formatDateForInput(dateString) {
+            if (!dateString) return '';
+            const date = new Date(dateString);
+            if (isNaN(date.getTime())) return '';
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            const hours = String(date.getHours()).padStart(2, '0');
+            const minutes = String(date.getMinutes()).padStart(2, '0');
+            return `${year}-${month}-${day}T${hours}:${minutes}`;
+        }
+
         function showEditSlipModal() {
             if (!currentSlipData) return;
 
             const slip = currentSlipData;
 
-            // Pre-fill all edit form fields
+            // Company Details
             document.getElementById('edit_company_name').value = slip.company_name || '';
             document.getElementById('edit_company_address').value = slip.company_address || '';
-            document.getElementById('edit_date').value = slip.date || '';
+
+            // Basic Details
+            document.getElementById('edit_date').value = formatDateForInput(slip.date);
             document.getElementById('edit_vehicle_no').value = slip.vehicle_no || '';
             document.getElementById('edit_party_name').value = slip.party_name || '';
+            document.getElementById('edit_mobile_number').value = slip.mobile_number || '';
             document.getElementById('edit_material_name').value = slip.material_name || '';
             document.getElementById('edit_ticket_no').value = slip.ticket_no || '';
-            document.getElementById('edit_payment_method').value = slip.payment_method || '';
-            document.getElementById('edit_payment_date').value = slip.payment_date || '';
-            document.getElementById('edit_payment_amount').value = slip.payment_amount || '';
-            document.getElementById('edit_payment_bank_account').value = slip.payment_bank_account || '';
-            document.getElementById('edit_payment_due_date').value = slip.payment_due_date || '';
-            document.getElementById('edit_payment_due_comment').value = slip.payment_due_comment || '';
+            document.getElementById('edit_broker').value = slip.broker || '';
+            document.getElementById('edit_terms_of_delivery').value = slip.terms_of_delivery || '';
+            document.getElementById('edit_sup_inv_no').value = slip.sup_inv_no || '';
+            document.getElementById('edit_gst_no').value = slip.gst_no || '';
 
-            // All 5 instalments
+            // Quantity Details
+            document.getElementById('edit_bags').value = slip.bags || 0;
+            document.getElementById('edit_net_weight_kg').value = slip.net_weight_kg || 0;
+            document.getElementById('edit_gunny_weight_kg').value = slip.gunny_weight_kg || 0;
+            document.getElementById('edit_rate_basis').value = slip.rate_basis || 'Quintal';
+            document.getElementById('edit_rate_value').value = slip.rate_value || 0;
+
+            // Deductions
+            document.getElementById('edit_bank_commission').value = slip.bank_commission || 0;
+            document.getElementById('edit_postage').value = slip.postage || 0;
+            document.getElementById('edit_batav_percent').value = slip.batav_percent || 0;
+            document.getElementById('edit_shortage_percent').value = slip.shortage_percent || 0;
+            document.getElementById('edit_dalali_rate').value = slip.dalali_rate || 0;
+            document.getElementById('edit_hammali_rate').value = slip.hammali_rate || 0;
+            document.getElementById('edit_freight').value = slip.freight || 0;
+            document.getElementById('edit_rate_diff').value = slip.rate_diff || 0;
+            document.getElementById('edit_quality_diff').value = slip.quality_diff || 0;
+            document.getElementById('edit_moisture_ded').value = slip.moisture_ded || 0;
+            document.getElementById('edit_tds').value = slip.tds || 0;
+            document.getElementById('edit_moisture_ded_comment').value = slip.moisture_ded_comment || '';
+
+            // All 5 instalments with all 5 fields
             for (let i = 1; i <= 5; i++) {
-                document.getElementById(`edit_instalment_${i}_date`).value = slip[`instalment_${i}_date`] || '';
+                document.getElementById(`edit_instalment_${i}_date`).value = formatDateForInput(slip[`instalment_${i}_date`]);
                 document.getElementById(`edit_instalment_${i}_amount`).value = slip[`instalment_${i}_amount`] || '';
+                document.getElementById(`edit_instalment_${i}_payment_method`).value = slip[`instalment_${i}_payment_method`] || '';
+                document.getElementById(`edit_instalment_${i}_payment_bank_account`).value = slip[`instalment_${i}_payment_bank_account`] || '';
                 document.getElementById(`edit_instalment_${i}_comment`).value = slip[`instalment_${i}_comment`] || '';
             }
 
+            // Comments
             document.getElementById('edit_quality_diff_comment').value = slip.quality_diff_comment || '';
             document.getElementById('edit_paddy_unloading_godown').value = slip.paddy_unloading_godown || '';
+
+            // Signatures
             document.getElementById('edit_prepared_by').value = slip.prepared_by || '';
             document.getElementById('edit_authorised_sign').value = slip.authorised_sign || '';
 
@@ -1049,6 +1237,75 @@
         function printSlipDirect(slipId) {
             // Send print request to Electron main process
             ipcRenderer.send('print-slip', slipId);
+        }
+
+        async function downloadCurrentSlipPDF() {
+            if (!currentViewSlipId || !currentSlipData) return;
+
+            try {
+                const response = await fetch(`http://localhost:5000/api/slip/${currentViewSlipId}/pdf`);
+                if (!response.ok) throw new Error('Failed to generate PDF');
+
+                const blob = await response.blob();
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `purchase_slip_${currentViewSlipId}_${new Date().getTime()}.pdf`;
+                document.body.appendChild(a);
+                a.click();
+                window.URL.revokeObjectURL(url);
+                document.body.removeChild(a);
+
+                alert('PDF downloaded successfully!');
+            } catch (error) {
+                console.error('Error downloading PDF:', error);
+                alert('Error downloading PDF: ' + error.message);
+            }
+        }
+
+        async function shareSlipWhatsApp() {
+            if (!currentViewSlipId || !currentSlipData) return;
+
+            const mobileNumber = currentSlipData.mobile_number;
+            if (!mobileNumber) {
+                alert('No mobile number found for this slip. Please add a mobile number in the slip details.');
+                return;
+            }
+
+            // Generate PDF first
+            try {
+                const response = await fetch(`http://localhost:5000/api/slip/${currentViewSlipId}/pdf`);
+                if (!response.ok) throw new Error('Failed to generate PDF');
+
+                const blob = await response.blob();
+                const file = new File([blob], `purchase_slip_${currentViewSlipId}.pdf`, { type: 'application/pdf' });
+
+                // Save PDF to temp location and get path
+                const formData = new FormData();
+                formData.append('pdf', file);
+                formData.append('mobile', mobileNumber);
+
+                const saveResponse = await fetch('http://localhost:5000/api/save-temp-pdf', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (!saveResponse.ok) throw new Error('Failed to prepare PDF for sharing');
+
+                const result = await saveResponse.json();
+                const cleanMobile = mobileNumber.replace(/[^0-9]/g, '');
+                const whatsappNumber = cleanMobile.startsWith('91') ? cleanMobile : '91' + cleanMobile;
+
+                // Construct WhatsApp message with PDF
+                const message = `Purchase Slip - Bill No: ${currentSlipData.bill_no || currentViewSlipId}`;
+                const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(message)}`;
+
+                window.open(whatsappUrl, '_blank');
+                alert('WhatsApp opened! Please manually attach the downloaded PDF to your message.');
+            } catch (error) {
+                console.error('Error sharing on WhatsApp:', error);
+                alert('Error sharing on WhatsApp: ' + error.message);
+            }
         }
 
         async function deleteSlip(slipId) {
