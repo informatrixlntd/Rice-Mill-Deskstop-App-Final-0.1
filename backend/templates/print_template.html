@@ -212,40 +212,36 @@
 
         <div class="content-section">
             <div class="section-title">Vehicle & Party Details</div>
-            <div class="field-grid">
-                <div class="field">
-                    <span class="field-label">Vehicle No:</span>
-                    <span class="field-value">{{ slip.vehicle_no or '' }}</span>
-                </div>
-                <div class="field">
-                    <span class="field-label">Party Name:</span>
-                    <span class="field-value">{{ slip.party_name or '' }}</span>
-                </div>
-                <div class="field">
-                    <span class="field-label">Material Name:</span>
-                    <span class="field-value">{{ slip.material_name or '' }}</span>
-                </div>
-                <div class="field">
-                    <span class="field-label">Ticket No:</span>
-                    <span class="field-value">{{ slip.ticket_no or '' }}</span>
-                </div>
-                <div class="field">
-                    <span class="field-label">Broker:</span>
-                    <span class="field-value">{{ slip.broker or '' }}</span>
-                </div>
-                <div class="field">
-                    <span class="field-label">Terms of Delivery:</span>
-                    <span class="field-value">{{ slip.terms_of_delivery or '' }}</span>
-                </div>
-                <div class="field">
-                    <span class="field-label">Sup. Inv. No:</span>
-                    <span class="field-value">{{ slip.sup_inv_no or '' }}</span>
-                </div>
-                <div class="field">
-                    <span class="field-label">GST No:</span>
-                    <span class="field-value">{{ slip.gst_no or '' }}</span>
-                </div>
-            </div>
+            <table style="width: 100%; border-collapse: collapse; margin-top: 8px;">
+                <tr>
+                    <td style="border: 1px solid #333; padding: 6px; font-weight: bold; width: 25%; font-size: 9pt;">Vehicle No:</td>
+                    <td style="border: 1px solid #333; padding: 6px; width: 25%; font-size: 9pt;">{{ slip.vehicle_no or '' }}</td>
+                    <td style="border: 1px solid #333; padding: 6px; font-weight: bold; width: 25%; font-size: 9pt;">Party Name:</td>
+                    <td style="border: 1px solid #333; padding: 6px; width: 25%; font-size: 9pt;">{{ slip.party_name or '' }}</td>
+                </tr>
+                <tr>
+                    <td style="border: 1px solid #333; padding: 6px; font-weight: bold; font-size: 9pt;">Mobile Number:</td>
+                    <td style="border: 1px solid #333; padding: 6px; font-size: 9pt;">{{ slip.mobile_number or '' }}</td>
+                    <td style="border: 1px solid #333; padding: 6px; font-weight: bold; font-size: 9pt;">Material Name:</td>
+                    <td style="border: 1px solid #333; padding: 6px; font-size: 9pt;">{{ slip.material_name or '' }}</td>
+                </tr>
+                <tr>
+                    <td style="border: 1px solid #333; padding: 6px; font-weight: bold; font-size: 9pt;">Ticket No:</td>
+                    <td style="border: 1px solid #333; padding: 6px; font-size: 9pt;">{{ slip.ticket_no or '' }}</td>
+                    <td style="border: 1px solid #333; padding: 6px; font-weight: bold; font-size: 9pt;">Broker:</td>
+                    <td style="border: 1px solid #333; padding: 6px; font-size: 9pt;">{{ slip.broker or '' }}</td>
+                </tr>
+                <tr>
+                    <td style="border: 1px solid #333; padding: 6px; font-weight: bold; font-size: 9pt;">Terms of Delivery:</td>
+                    <td style="border: 1px solid #333; padding: 6px; font-size: 9pt;">{{ slip.terms_of_delivery or '' }}</td>
+                    <td style="border: 1px solid #333; padding: 6px; font-weight: bold; font-size: 9pt;">Sup. Inv. No:</td>
+                    <td style="border: 1px solid #333; padding: 6px; font-size: 9pt;">{{ slip.sup_inv_no or '' }}</td>
+                </tr>
+                <tr>
+                    <td style="border: 1px solid #333; padding: 6px; font-weight: bold; font-size: 9pt;">GST No:</td>
+                    <td colspan="3" style="border: 1px solid #333; padding: 6px; font-size: 9pt;">{{ slip.gst_no or '' }}</td>
+                </tr>
+            </table>
         </div>
 
         <div class="content-section">
@@ -304,11 +300,11 @@
                 <span>₹ {{ "%.2f"|format(slip.batav or 0) }}</span>
             </div>
             <div class="calc-row">
-                <span>Dalali (Rate: {{ "%.2f"|format(slip.dalali_rate or 0) }}):</span>
+                <span>Dalali:</span>
                 <span>₹ {{ "%.2f"|format(slip.dalali or 0) }}</span>
             </div>
             <div class="calc-row">
-                <span>Hammali (Rate: {{ "%.2f"|format(slip.hammali_rate or 0) }}):</span>
+                <span>Hammali:</span>
                 <span>₹ {{ "%.2f"|format(slip.hammali or 0) }}</span>
             </div>
             <div class="calc-row">

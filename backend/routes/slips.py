@@ -137,16 +137,8 @@ def calculate_fields(data):
     batav = round(total_purchase_amount * (batav_percent / 100), 2) if batav_percent > 0 else 0
     shortage = round(total_purchase_amount * (shortage_percent / 100), 2) if shortage_percent > 0 else 0
 
-    # NEW: Dalali & Hammali based on selected Rate Basis
-    if rate_basis == 'Quintal':
-        dalali = round(weight_quintal * dalali_rate, 2) if dalali_rate > 0 else 0
-        hammali = round(weight_quintal * hammali_rate, 2) if hammali_rate > 0 else 0
-    elif rate_basis == 'Khandi':
-        dalali = round(weight_khandi * dalali_rate, 2) if dalali_rate > 0 else 0
-        hammali = round(weight_khandi * hammali_rate, 2) if hammali_rate > 0 else 0
-    else:
-        dalali = 0
-        hammali = 0
+    dalali = round(weight_quintal * dalali_rate, 2) if dalali_rate > 0 else 0
+    hammali = round(weight_quintal * hammali_rate, 2) if hammali_rate > 0 else 0
 
     total_deduction = round(bank_commission + postage + batav + shortage + dalali + hammali + freight + rate_diff + quality_diff + moisture_ded + tds, 2)
     payable_amount = round(total_purchase_amount - total_deduction, 2)
@@ -198,7 +190,7 @@ def add_slip():
         cursor.execute('''
             INSERT INTO purchase_slips (
                 company_name, company_address, document_type, vehicle_no, date,
-                bill_no, party_name, material_name, ticket_no, broker,
+                bill_no, party_name, mobile_number, material_name, ticket_no, broker,
                 terms_of_delivery, sup_inv_no, gst_no,
                 bags, avg_bag_weight,
                 net_weight_kg, gunny_weight_kg, final_weight_kg,
@@ -207,14 +199,14 @@ def add_slip():
                 bank_commission, postage, batav_percent, batav,
                 shortage_percent, shortage, dalali_rate, dalali, hammali_rate,
                 hammali, freight, rate_diff, quality_diff, quality_diff_comment,
-                moisture_ded, tds, total_deduction, payable_amount,
+                moisture_ded, moisture_ded_comment, tds, total_deduction, payable_amount,
                 instalment_1_date, instalment_1_amount, instalment_1_payment_method, instalment_1_payment_bank_account, instalment_1_comment,
                 instalment_2_date, instalment_2_amount, instalment_2_payment_method, instalment_2_payment_bank_account, instalment_2_comment,
                 instalment_3_date, instalment_3_amount, instalment_3_payment_method, instalment_3_payment_bank_account, instalment_3_comment,
                 instalment_4_date, instalment_4_amount, instalment_4_payment_method, instalment_4_payment_bank_account, instalment_4_comment,
                 instalment_5_date, instalment_5_amount, instalment_5_payment_method, instalment_5_payment_bank_account, instalment_5_comment,
                 prepared_by, authorised_sign, paddy_unloading_godown
-            ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+            ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
         ''', (
             data.get('company_name', ''),
             data.get('company_address', ''),
@@ -223,6 +215,7 @@ def add_slip():
             slip_date,
             bill_no,
             data.get('party_name', ''),
+            data.get('mobile_number', ''),
             data.get('material_name', ''),
             data.get('ticket_no', ''),
             data.get('broker', ''),
@@ -254,6 +247,7 @@ def add_slip():
             safe_float(data.get('quality_diff', 0), 0),
             data.get('quality_diff_comment', ''),
             safe_float(data.get('moisture_ded', 0), 0),
+            data.get('moisture_ded_comment', ''),
             safe_float(data.get('tds', 0), 0),
             safe_float(data.get('total_deduction', 0), 0),
             safe_float(data.get('payable_amount', 0), 0),
@@ -452,7 +446,7 @@ def update_slip(slip_id):
             UPDATE purchase_slips SET
                 company_name = %s, company_address = %s, document_type = %s,
                 vehicle_no = %s, date = %s,
-                party_name = %s, material_name = %s, ticket_no = %s, broker = %s,
+                party_name = %s, mobile_number = %s, material_name = %s, ticket_no = %s, broker = %s,
                 terms_of_delivery = %s, sup_inv_no = %s, gst_no = %s,
                 bags = %s, avg_bag_weight = %s,
                 net_weight_kg = %s, gunny_weight_kg = %s, final_weight_kg = %s,
@@ -461,7 +455,7 @@ def update_slip(slip_id):
                 bank_commission = %s, postage = %s, batav_percent = %s, batav = %s,
                 shortage_percent = %s, shortage = %s, dalali_rate = %s, dalali = %s,
                 hammali_rate = %s, hammali = %s, freight = %s, rate_diff = %s,
-                quality_diff = %s, quality_diff_comment = %s, moisture_ded = %s,
+                quality_diff = %s, quality_diff_comment = %s, moisture_ded = %s, moisture_ded_comment = %s,
                 tds = %s, total_deduction = %s, payable_amount = %s,
                 instalment_1_date = %s, instalment_1_amount = %s, instalment_1_payment_method = %s, instalment_1_payment_bank_account = %s, instalment_1_comment = %s,
                 instalment_2_date = %s, instalment_2_amount = %s, instalment_2_payment_method = %s, instalment_2_payment_bank_account = %s, instalment_2_comment = %s,
@@ -477,6 +471,7 @@ def update_slip(slip_id):
             merged_data.get('vehicle_no', ''),
             parse_datetime_to_ist(merged_data.get('date')),
             merged_data.get('party_name', ''),
+            merged_data.get('mobile_number', ''),
             merged_data.get('material_name', ''),
             merged_data.get('ticket_no', ''),
             merged_data.get('broker', ''),
@@ -508,6 +503,7 @@ def update_slip(slip_id):
             safe_float(merged_data.get('quality_diff', 0), 0),
             merged_data.get('quality_diff_comment', ''),
             safe_float(merged_data.get('moisture_ded', 0), 0),
+            merged_data.get('moisture_ded_comment', ''),
             safe_float(merged_data.get('tds', 0), 0),
             safe_float(merged_data.get('total_deduction', 0), 0),
             safe_float(merged_data.get('payable_amount', 0), 0),
